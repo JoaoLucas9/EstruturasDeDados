@@ -3,9 +3,6 @@ from erros import ItemNaoEncontrado, ParametroNaoInformado, FalhaNaOperacao, \
 from iteruteis import tamanho as contar
 from uteis import IteradorVazio
 
-#As árvores não estão preparadas para lidar com itens duplicados
-#proxima versão: aprimorar a capacidade delas para lidar com duplicados
-
 
 def _itemNaoEncontrado():
     raise ItemNaoEncontrado
@@ -78,7 +75,6 @@ class arvore:
         return self._tamanho
 
 
-    # TODO refatorar
     def inserir(self, item, pai=_NAO_ESPECIFICADO):
         """Insere o item na árvore.
 
@@ -203,10 +199,8 @@ class arvore:
             self._tamanho -= quantidadeDeItensRemovidos
 
 
-    # TODO informar a quantidade de filhos q um item deve ter p/ o met
-    #  rtornar true
     def possuiFilhos(self, item):
-        """Retorna true se o item possuir filhos, false caso contrário.
+        """Retorna true se o item um ou mais filhos, false caso contrário.
         Exceções
            :exception ItemNaoEncontradoErro se o item não for encontrado.
         """
@@ -280,8 +274,6 @@ class _IteradorPosFixado:
 class _IteradorPorNivel:
     """Itera pelos nodos de uma árvore que estão em um nível específico."""
 
-    # TODO se o nível for negativo então todos os nodos serão visitados,
-    #  o que é um grande erro
     def __init__(self, raiz, nivel):
         """:param raiz : _Nodo a raiz de uma árvore.
         :param nivel : int nível da árvore que será percorrido.
@@ -395,7 +387,6 @@ class _IteradorInterFixado:
         return self
 
 
-    # TODO retornar tupla
     def _iterador(self, nodo):
         """O coração do _IteradorInterFixado."""
         esquerdo = self._esquerdo(nodo)
@@ -416,6 +407,7 @@ class _IteradorInterFixado:
         if isinstance(nodo, _Nodo):
             return nodo.filhos[0] if len(nodo.filhos) >= 1 else None
         return nodo.esquerdo
+
 
     def _direito(self, nodo):
         if isinstance(nodo, _Nodo):
@@ -608,7 +600,6 @@ class Heap:
     def _extremaEsquerda(self):
         """Descer o máximo que puder e retornar o _Nodo que está lá na
         extrema esquerda."""
-        # TODO iteradortinterfixado deve ser melhor
         return next(_IteradorPosFixado(self._raiz))
 
 
@@ -790,7 +781,6 @@ class ArvoreAVL:
     # O rebalanceamento utilizado  está descrito no livro "Estruturas de
     # Dados e Algoritmos em Java", de Goodrich e Tamassia, 5ª edição
     # capítulo 10, seção 10.2.1, página 449
-    # TODO refatorar
     def _rebalancear(self, z):
         y = self._filhoMaisAlto(z)
         x = self._filhoMaisAlto(y)
@@ -1094,7 +1084,6 @@ class _NodoBin:
         return self.esquerdo if self.esquerdo is not None else self.direito,
 
 
-# TODO refatorar
 class ArvoreVP:
 
 

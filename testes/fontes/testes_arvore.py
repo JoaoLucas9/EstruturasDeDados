@@ -212,11 +212,13 @@ def testes_propriedade_tamanho_aposInserirAlgunsItensEmUmaArvore():
     assert numeros.tamanho == 10
 
 
-def testes_metodo_possuiFilhos():
+def testes_oMetodo_possuiFilhos_retornaraTrueSeOItemPossuirUmOuMaisFilhos():
     assert arvore.possuiFilhos(arvore.raiz)
     assert arvore.possuiFilhos(1)
     assert arvore.possuiFilhos(6)
 
+
+def testes_oMetodo_possuiFilhos_retornaraFalseSeOItemNaoPossuirNenhumFilho():
     assert not arvore.possuiFilhos(2)
     assert not arvore.possuiFilhos(None)
 

@@ -1,3 +1,37 @@
+Nenhuma das estruturas foi preparada para lidar com itens duplicados, a próxima
+ versão das eds deverão ser capazes de lidar com esta situação
+
+arvore
+    documentar o módulo
+
+    arvore
+        refatorar o método inserir(item, pai)
+
+    _IteradorPorNivel
+        método __init__(raiz, nivel)
+            deveria lançar uma exceção ao se informar um valor negativo no
+            segundo parâmetro, ou pelo menos não deveria iterar por todos os
+            nodos descentendetes da raiz para evitar processamento
+            desnecessário.
+
+    _IteradorInterFixado
+        _iterador(nodo)
+            o método deveria retornar uma tupla, não lembro o porquê, mas acho
+            que o motive é que as tuplas são menores e talvez até mais rápidas
+            que geradores (até ums 3 itens)
+
+    ArvoreVP
+        refatorar toda a classe
+        documentá-la
+
+    Heap
+        _extremaEsquerda()
+            next(_IteradorPosFixado(self._raiz)) ->
+            next(_IteradorInterFixado(self._raiz))
+
+    ArvoreAVL
+        refatorar o método _rebalancear()
+
 grafo:
    ao pedir os trajetos de A para E os clientes podem desejar informações
 sobre o trajeto completo, distância total, duração total etc, ou eles podem
