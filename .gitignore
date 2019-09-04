@@ -1,0 +1,13 @@
+PadroesTestes
+Conceitos
+Aprimoramentos
+testes/arcevo/
+produção/arcevo/*
+produção/ideias
+produção/Registros
+produção/fontes/colecoes
+produção/fontes/lista.py
+testes/fontes/testes_colecoes
+.idea/
+*__pycache__
+.idea/
