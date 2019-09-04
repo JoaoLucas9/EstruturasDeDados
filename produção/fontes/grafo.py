@@ -71,8 +71,6 @@ class Grafo:
         return len(self._vertices)
 
 
-    # TODO eu ainda preciso mudar a representação das ligações, l.nome é
-    #  melhor que l['nome']
     def inserir(self, item, b=NAO_INFORMADO, **info):
         """Insere o item no grafo.
 
@@ -169,8 +167,6 @@ class Grafo:
         return caminhar(a)
 
 
-    # TODO refatorar
-    # TODO documentar distancia
     def caminhos(self, a, b):
         """Retorna uma lista contendo todos os caminhos simples de a para b.
 
@@ -263,7 +259,6 @@ class Grafo:
                      v2.item == p)
 
 
-    # TODO computar os dados ou registra-los em memória
     def _vertices_ligacoes(self):
         # v e a são vértices, l é a ligação de v para a
         # o método retorna todos os pares, juntamente com a ligação que os

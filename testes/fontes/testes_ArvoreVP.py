@@ -408,7 +408,7 @@ def testes_metodo_remover4():
     assert nums.filhos(2) == (0, )
     assert nums.cor(0) is VERMELHO
     assert nums.cor(2) is PRETO
-    # todo remover mais profundo
+
 
 
 def testes_metodo_remover5():

@@ -830,7 +830,6 @@ def testes_caminhosMinimos_retornaraUmaListaVaziaSeNaoHouverCaminhoDeAparaB():
     assert vazio(grafo.caminhosMinimos('AM', 'SP'))
 
 
-# TODO reduzir nome
 def testes_caminhosMinimos_retornaraUmaListaVaziaSeAsDistanciasDeTodosOsCaminhosDeAparaBForemIndefinidas():
     grafo = novoGrafo('PE', 'SP', 'RJ', 'MT')
     grafo.ligar('PE', 'SP', distancia=800, id='010')

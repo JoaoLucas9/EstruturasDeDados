@@ -4,8 +4,6 @@ from random import choice
 from erros import ColecaoVazia as ListaVazia
 
 
-
-# TODO documentar
 def _encapsular(comparador):
 
     def _comparador(c1, c2):
@@ -113,7 +111,6 @@ class SkipList:
         return self.tamanho == 0
 
 
-    # TODO refatorar
     def  __setitem__(self, chave, valor):
         """Insere o par chave-valor ou substitui o atual
         valor da chave (se ela já estiver presente na lista).

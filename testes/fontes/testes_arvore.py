@@ -325,6 +325,3 @@ def testes_doIteradorPorNivel():
     assert [nodo.item for nodo in Iterador(raiz, 5)] == [13, 14, 15, 16, 17,
                                                          18, 19, 20, 21, 22]
 
-
-# TODO um nível negativo
-# TODO um nível muito grande
