@@ -1,3 +1,12 @@
+"""Contém uma implementação de um grafo.
+
+Constantes
+    ORIENTADA e NAO_ORIENTADA: tipos das ligações do grafo.
+
+Autor: João Lucas Alves Almeida Santos
+Versão: 0.1 beta
+"""
+
 from tabelaHash import TabelaHash
 from erros import ItemNaoEncontrado, FalhaNaOperacao
 from copy import deepcopy
@@ -23,7 +32,7 @@ def _ligacoesSemADistanciaInformada(v1, v2):
 _VERTICES = lambda it: filter(lambda o:isinstance(o, _Vertice), it)
 
 
-def atualizar(dicio, d):
+def _atualizar(dicio, d):
     dicio.update(d)
     return dicio
 
@@ -34,9 +43,16 @@ NAO_ORIENTADA = 'não orientada'
 
 class Grafo:
     """Estrutura de dados grafo, aceita ligações orientadas e não
-    orientadas, além de possuir diversas métodos.
+    orientadas representadas por dicionários que armazenam
+    quaisquer informações desejadas sobre a ligação no formato de
+    chave-valor, por exemplo, id=1.
 
-    Versão: 0.1 beta
+    A chave 'distancia' (sem acento) merece uma atenção especial, o grafo pode
+    reconhecê-la e calcular a distância total ou determinar o menor caminho
+    entre dois pontos. Ver a documentação dos métodos caminhos(self, a, b) e
+    caminhosMinimos(self, a, b) para mais informações. O valor associado com a
+    chave em questão deve ser um int ou float.
+
     """
 
 
@@ -60,7 +76,7 @@ class Grafo:
 
     @property
     def totalDeLigacoes(self):
-        """Qunatidade de ligações orientadas + não orientadas."""
+        """Quantidade de ligações orientadas + não orientadas."""
         return self._totalDeLigacoesOrientadas + \
                self._totalDeLigacoesNaoOrientadas
 
@@ -99,8 +115,6 @@ class Grafo:
 
     def __contains__(self, item):
         """Determina se o grafo possui o item."""
-        #verifica apenas os vértices, novas verões podem veririfcar se o
-        # grafo possui uma ligação
         for v in self._vertices:
             if v.item == item:
                 return True
@@ -192,6 +206,13 @@ class Grafo:
              b, contudo, todas as informações da ligação entre a e b podem
              ser acessadas bem como os valores das chaves citadas acima.
 
+            distancia - a distância total do caminho, soma das distâncias
+            de todos os trechos.
+            Este valor só estará disponível se todos os trechos tiverem a
+            distância informada e para evitar problemas ou
+            comportamentos/resultados inesperados não informe valores
+            negativos.
+
         Parâmetros
            :param a origem
 
@@ -204,17 +225,6 @@ class Grafo:
         nenhum então retorna uma lista vazia.
 
         """
-        # documentar que o grafo reconhece o valor especial distancia e que
-        # ele obtém as distancias dos trechos para computar a distancia
-        # total do caminho
-        # se todos os trechos tiverem esta informação então ele computará a
-        # distancia do caminho, caso a distancia de um dos trechos não seja
-        # informada então a distancia total do caminho não será computada.
-        # documentar basicamente que se todos os trechos tiverem a distancia
-        # informada haverá o campo distancia no dicio mais externo,
-        # se a distancia não tiver sido informada para um dos trechos então
-        # o campo citado não estará disponivel
-        # distancia deve ser um int ou float
         caminhos = []
 
         for rota in self._rotas(self._vertice(a), self._vertice(b)):
@@ -224,7 +234,7 @@ class Grafo:
             # significa que possui apenas a origem e o destino e a ligação
             # que os conecta, (a, lig, b)
             if len(rota) is 3:
-                caminhos.append(atualizar(caminho, rota[1]))
+                caminhos.append(_atualizar(caminho, rota[1]))
             else:
                 caminho['trechos'] = {(rota[i].item, rota[i +2].item):rota[i +1] for i in
                                       range(0, len(rota) - 2, 2)}
@@ -384,36 +394,15 @@ class Grafo:
         return tuple(_ligacoes(a, b))
 
 
-    def caminhosMinimosOriginal(self, a, b):
-        caminhos = self.caminhos(a, b)
-
-        if vazio(caminhos):
-            return []
-
-        caminhosMinimos = []
-        distanciaMinima = float('inf')
-
-        for caminho in caminhos:
-            distancia = caminho.get('distancia', float('inf'))
-
-            if distancia < distanciaMinima:
-                distanciaMinima = distancia
-                caminhosMinimos = [caminho]
-            elif distancia == distanciaMinima:
-                caminhosMinimos.append(caminho)
-
-        return caminhosMinimos
-
-
     def caminhosMinimos(self, a, b):
-        """Retorna uma lista com os menores caminhos possíveis de a para b.
+        """Retorna uma lista com os menores caminhos de a para b.
 
         A lista retornada estará vazia se, 1) não for possível calcular a
         distância de nenhum dos caminhos que levam de a para b, ou 2) se não
         houver nenhum caminho possível.
 
         Se houver algum caminho para o qual não é possível calcular a
-        distancia, ele será ignorado.
+        distância, ele será ignorado.
 
         A lista retornada é semelhante a lista retornada pelo método
         caminhos(a, b).
@@ -487,7 +476,7 @@ class Grafo:
 
     def _ligacoes(self):
         """Retorna uma lista de prioridades contendo dicios
-        campos origem, destino e ligacao"""
+        campos origem, destino e ligação"""
         ligacoes = Heap(lambda x1, x2: IGUAIS if x1 == x2 else min(x1, x2))
 
         for v1, lig, v2 in self._vertices_ligacoes():
@@ -533,7 +522,7 @@ class Grafo:
 
 class _Vertice:
     """Os vértices do grafo."""
-    # nova estrutura: propiedade adjacentes = vertices adjacentes a este
+    # nova estrutura: propriedade adjacentes = vertices adjacentes a este
     # precisa melhorar um pouco
 
     def __init__(self, item):
@@ -568,13 +557,13 @@ class _Vertice:
 
 
     def ligar(self, vertice, ligacao=None):
-        """Liga este vertice ao vertice informado.
-        Exemplo: seja este o vertice A e o vertice informado é o B,
+        """Liga este vértice ao vértice informado.
+        Exemplo: seja este o vértice A e o vértice informado é o B,
         este método ligará A e B.
         A ligação não é orientada.
 
         Parâmetros
-           :param vertice o vertice ao qual este será interligado.
+           :param vertice o vértice ao qual este será interligado.
 
            :param dicio informações sobre a nova ligação
         """

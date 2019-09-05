@@ -1,3 +1,9 @@
+"""Implementação de uma SkipList.
+
+Autor: João Lucas Alves Almeida Santos
+Versão: 0.1 beta
+"""
+
 from erros import ItemNaoEncontrado as ChaveNaoEncontrada
 from arvore import IGUAIS
 from random import choice

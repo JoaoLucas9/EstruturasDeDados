@@ -1,3 +1,9 @@
+"""Implementação de uma TabelaHash.
+
+Autor: João Lucas Alves Almeida Santos
+Versão: 0.1 beta
+"""
+
 from erros import ItemNaoEncontrado as ChaveNaoEncontrada
 from random import randint
 from numeros import primos, primeiroPrimoMaiorQue

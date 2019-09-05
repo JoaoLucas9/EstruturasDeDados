@@ -1,3 +1,9 @@
+"""Erros comuns que podem ser gerados ao trabalhar com coleções.
+
+Autor: João Lucas Alves Almeida Santos
+Versão: 0.1
+"""
+
 class FalhaNaOperacao(Exception):
     """Propósito: indicar que um método ou função falhou, exemplo:
     abrirArquivo('músicas'), suponha que o arquivo não existe, pode-se dizer
@@ -39,5 +45,7 @@ class ParametroNaoInformado(FalhaNaOperacao):
 
 
 class ColecaoVazia(FalhaNaOperacao):
-    pass
+    """Erro gerado ao tentar executar uma operação, como remover um item de
+    uma pilha ou acessar o último item de uma lista, sobre uma coleção vazia.
+    """
 

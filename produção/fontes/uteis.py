@@ -1,3 +1,17 @@
+"""Funções diversas para auxiliar e facilitar o trabalho de escrever
+programas. A idéia é que elas substituam trechos de código e idiomas, mesmo
+que simples, para que o resultado final seja o melhor possível, além de
+definir constantes comuns evitando assim a duplicação.
+
+O código deve ser o menor, mais simple e o mais elegante possível
+Previsível e intuitivo
+Sem surpresas
+Toda melhoria importa
+
+Autor: João Lucas Alves Almeida Santos
+Versão: 0.1
+"""
+
 NAO_INFORMADO = 'valor não informado Recife_PE 26/08/2019 14:35'
 INDEFINIDO = 'valor não definido Recife_PE 30/08/2019 07:08'
 INFINITO = float('inf')

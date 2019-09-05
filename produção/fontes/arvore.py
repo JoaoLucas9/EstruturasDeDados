@@ -1,3 +1,30 @@
+"""Implementações de uma árvore genérica, binária, AVL e vermelho-preto além
+de um Heap.
+
+Constantes
+
+   INDEFINIDO: constante de uso geral, pode ser o valor padrão para
+   argumentos de métodos/funções, bem como pode ser o valor retornado.
+
+   NAO_INFORMADO: constante de uso geral, usada principalmente como o valor
+   padrão para argumentos de métodos/funções. A principal diferença entre
+   NAO_INFORMADO e INDEFINIDO é que em alguns a primeira será
+   mais apropriada que a segunda, em outros a segunda será mais interessante,
+   sinta-se livre para usa-las como desejar.
+
+   IGUAIS: utilizada por comparadores para informar que os objetos/valores
+   comparados são iguais.
+
+   PRETO: constante de uso geral, representa a cor preta, utilizada por
+   árvores vermelho-preto para indicar a cor de um item.
+
+   VERMELHO: constante de uso geral, representa a cor vermelho, utilizada por
+   árvores vermelho-preto para indicar a cor de um item.
+
+Autor: João Lucas Alves Almeida Santos
+Versão: 0.1 beta
+"""
+
 from erros import ItemNaoEncontrado, ParametroNaoInformado, FalhaNaOperacao, \
     ColecaoVazia
 from iteruteis import tamanho as contar
@@ -37,15 +64,8 @@ def _permutarNodos(nodo1, nodo2):
         nodo2.prioridade = p
 
 
-def _nodosAncestrais(nodo):
-        while nodo.pai is not None:
-            nodo = nodo.pai
-            yield nodo
-
-
-_NAO_ESPECIFICADO = 'parâmetro_não_especificado_Recife_PE 16/06/2019 09:54h'
 INDEFINIDO = 'indefinido_Recife_PE 29/06/2019 06:13h'
-# utilizada para informar que as prioridades de dois itens são iguais
+NAO_INFORMADO = 'parâmetro_não_especificado_Recife_PE 16/06/2019 09:54h'
 IGUAIS = 'as prioridades são iguais_Recife_PE 01/07/2019 14:42h'
 PRETO = 0
 VERMELHO = 1
@@ -75,7 +95,16 @@ class arvore:
         return self._tamanho
 
 
-    def inserir(self, item, pai=_NAO_ESPECIFICADO):
+    @property
+    def vazia(self):
+        """True se a árvore estiver vazia, false caso contrário.
+
+        Escrita: ✗
+        """
+        return self._raiz is None
+
+
+    def inserir(self, item, pai=NAO_INFORMADO):
         """Insere o item na árvore.
 
         Parâmetros
@@ -93,7 +122,7 @@ class arvore:
         """
         nodo = _Nodo(item)
 
-        if pai is _NAO_ESPECIFICADO:
+        if pai is NAO_INFORMADO:
             if not self.vazia:
                 raise ParametroNaoInformado('pai')
             self._raiz = nodo
@@ -103,11 +132,6 @@ class arvore:
             nodo.pai = pai
 
         self._tamanho += 1
-
-
-    @property
-    def vazia(self):
-        return self._raiz is None
 
 
     def __iter__(self):
@@ -134,7 +158,7 @@ class arvore:
         Parâmetros
            :param item o alvo desta operação
 
-           :param funcao a função que será invocada caso nehum nodo seja
+           :param funcao a função que será invocada caso nenhum nodo seja
            encontrado.
 
         :return o nodo encontrado.
@@ -182,7 +206,7 @@ class arvore:
 
 
     def remover(self, item):
-        """Remove a subarvore enraizada em item.
+        """Remove a subárvore enraizada em item.
         Caso o item não seja encontrado, o método retorna normalmente,
         sem gerar erro.
         """
@@ -208,7 +232,7 @@ class arvore:
 
 
     def tamanhoDaSubarvore(self, raiz):
-        """Retorna o tamanho da subarvore enraizada em raiz.
+        """Retorna o tamanho da subárvore enraizada em raiz.
         Exceções
            :exception ItemNaoEncontradoErro se o item não for encontrado.
         """
@@ -342,7 +366,7 @@ class ArvoreBinaria(arvore):
         super().__init__()
 
 
-    def inserir(self, item, pai=_NAO_ESPECIFICADO):
+    def inserir(self, item, pai=NAO_INFORMADO):
         """Insere o item na árvore.
 
         Parâmetros
@@ -361,7 +385,7 @@ class ArvoreBinaria(arvore):
 
            :exception FalhaNaOperacao se o pai já possuir 2 filhos.
         """
-        if pai != _NAO_ESPECIFICADO and len(super().filhos(pai)) == 2:
+        if pai != NAO_INFORMADO and len(super().filhos(pai)) == 2:
             raise FalhaNaOperacao(f'{pai} já possui 2 filhos.')
         super().inserir(item, pai)
 
@@ -492,7 +516,7 @@ class Heap:
         return self._tamanho
 
 
-    def inserir(self, item, prioridade=_NAO_ESPECIFICADO):
+    def inserir(self, item, prioridade=NAO_INFORMADO):
         """Insere o item na árvore.
         As prioridades dos itens podem ser configuradas explicitamente,
         se este for o caso, então os objetos que representam os objetos
@@ -520,7 +544,7 @@ class Heap:
 
     def _nodoPrioritario(self, item, prioridade):
         nodo = _Nodo(item)
-        nodo.prioridade = item if prioridade == _NAO_ESPECIFICADO else prioridade
+        nodo.prioridade = item if prioridade == NAO_INFORMADO else prioridade
 
         return nodo
 
@@ -539,6 +563,7 @@ class Heap:
 
 
     def __iter__(self):
+        """Retorna um iterador pós fixado."""
         if self.vazio:
             return IteradorVazio()
         return _Iterador(_IteradorPosFixado(self._raiz))
@@ -604,7 +629,7 @@ class Heap:
 
 
     def _upHeapBubbling(self, nodo):
-        for anc in _nodosAncestrais(nodo):
+        for anc in _ancestrais(nodo):
             if self._maior(nodo.prioridade, anc.prioridade) is nodo.prioridade:
                 _permutarNodos(nodo, anc)
                 nodo = anc
@@ -617,7 +642,7 @@ class Heap:
         Erros
            :exception ItemNaoEncontrado caso o item não seja encontrado.
         """
-        return (nodo.item for nodo in _nodosAncestrais(self._nodo(item)))
+        return (nodo.item for nodo in _ancestrais(self._nodo(item)))
 
 
     def remover(self):
@@ -809,10 +834,10 @@ class ArvoreAVL:
 
     def _filhoMaisAlto(self, nodo):
         """Dentre os filhos do nodo, retorna o mais alto, caso ambos possuam a
-        mesam altura retorna o filho no mesmo lado do pai, ou seja, se p for o
+        mesma altura retorna o filho no mesmo lado do pai, ou seja, se p for o
         pai do nodo e p por sua vez é um filho a esquerda de um outro nodo,
         então este método retorna o filho a esquerda do nodo, caso p seja um
-        filho a direita de um outro nodo, esntão este método retorna o
+        filho a direita de um outro nodo, então este método retorna o
         filho a direita do nodo."""
         filhos = nodo.esquerdo, nodo.direito
 
@@ -967,12 +992,10 @@ class ArvoreAVL:
         return self._altura(self._nodo(item))
 
 
-
     def _altura(self, nodo):
         if not _possuiFilhos(nodo):
             return 0
         return max(self._altura(n) for n in nodo.filhos) +1
-
 
 
     def remover(self, item):
@@ -1085,6 +1108,7 @@ class _NodoBin:
 
 
 class ArvoreVP:
+    """Árvore vermelho-preto."""
 
 
     def __init__(self, comparador):
@@ -1391,7 +1415,7 @@ class ArvoreVP:
             t = nodo.esquerdo if nodo.direito is None else nodo.direito
             self._registrarFilho(t, nodo.pai)
 
-            #cpnsidera-se que se o nodo possui um único filho, então um dos
+            #considera-se que se o nodo possui um único filho, então um dos
             # dois será vermelho
             t.cor = PRETO
         else:
@@ -1434,20 +1458,6 @@ class ArvoreVP:
         return next(_IteradorInterFixado(nodo))
 
 
-    def _resolverDuploPretoOPriginal(self, x):
-        """:param x pai do duplo preto"""
-        y = x.esquerdo if x.direito is None else x.direito
-
-        if not _possuiFilhos(y):
-            self._recolorir({y:VERMELHO, x:PRETO})
-        elif _possui1Filho(y): # assume-se que o filho é vermelho
-            z = y.esquerdo if y.direito is None else y.direito
-            b = self._reestruturar(x, y, z)
-            self._recolorir({b:x.cor, b.esquerdo:PRETO, b.direito:PRETO})
-        elif y.cor is VERMELHO:
-            self._ajustar(x, y)
-
-
     def _resolverDuploPreto(self, x, nodo):
         """:param x pai do duplo preto
         :param nodo o nodo duplo preto, pode ser None
@@ -1468,7 +1478,7 @@ class ArvoreVP:
             self._recolorir({b: x.cor, b.esquerdo: PRETO, b.direito: PRETO})
 
 
-    def _ajustar(self, x, y): # trata do caso 3
+    def _ajustar(self, x, y):
         z = y.direito if y is x.direito else y.esquerdo
         b = self._reestruturar(x, y, z)
         self._recolorir({y:PRETO, x: VERMELHO})
