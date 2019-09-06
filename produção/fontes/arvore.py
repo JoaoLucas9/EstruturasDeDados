@@ -28,7 +28,7 @@ Versão: 0.1 beta
 from erros import ItemNaoEncontrado, ParametroNaoInformado, FalhaNaOperacao, \
     ColecaoVazia
 from iteruteis import tamanho as contar
-from uteis import IteradorVazio
+from uteis import IteradorVazio, NAO_INFORMADO, INDEFINIDO
 
 
 def _itemNaoEncontrado():
@@ -64,8 +64,6 @@ def _permutarNodos(nodo1, nodo2):
         nodo2.prioridade = p
 
 
-INDEFINIDO = 'indefinido_Recife_PE 29/06/2019 06:13h'
-NAO_INFORMADO = 'parâmetro_não_especificado_Recife_PE 16/06/2019 09:54h'
 IGUAIS = 'as prioridades são iguais_Recife_PE 01/07/2019 14:42h'
 PRETO = 0
 VERMELHO = 1
@@ -149,6 +147,11 @@ class arvore:
 
 
     def profundidade(self, item):
+        """Retorna a profundidade do item.
+
+        Erros
+           :exception ItemNaoEncontradoErro se o item não for localizado.
+        """
         return contar(_ancestrais(self._nodo(item)))
 
 
@@ -173,10 +176,10 @@ class arvore:
         return funcao()
 
 
-    def altura(self, item='raiz'):
+    def altura(self, item=NAO_INFORMADO):
         """Retorna a altura do item na árvore, se o item não for informado
         será retornada a altura da árvore."""
-        filhos = self._filhos(self.raiz if item == 'raiz' else item)
+        filhos = self._filhos(self.raiz if item is NAO_INFORMADO else item)
 
         if len(filhos) == 0:
             return 0
@@ -192,21 +195,28 @@ class arvore:
     def pai(self, item):
         """Retorna o pai de um item.
 
+        Retorna a constante uteis.INDEFINIDO se o item informado for a raiz.
+
         Erros
            :exception ItemNaoEncontradoErro se o item não for encontrado
         """
-        return INDEFINIDO if item == self.raiz else self._nodo(item).pai.item
+        nodo = self._nodo(item)
+
+        return INDEFINIDO if nodo.pai is None else self._nodo(item).pai.item
 
 
     def filhos(self, item):
         """Retorna os filhos de um item.
-        :exception ItemNaoEncontradoErro se o item não for encontrado
+
+        Erros
+           :exception ItemNaoEncontradoErro se o item não for localizado.
         """
         return tuple(nodo.item for nodo in self._nodo(item).filhos)
 
 
     def remover(self, item):
         """Remove a subárvore enraizada em item.
+
         Caso o item não seja encontrado, o método retorna normalmente,
         sem gerar erro.
         """
@@ -214,18 +224,18 @@ class arvore:
 
         if nodo is self._raiz:
             self._raiz = None
-            self._tamanho = 0
         elif nodo != 'não encontrado':
-            quantidadeDeItensRemovidos = self.tamanhoDaSubarvore(item)
             pai = nodo.pai
             pai.filhos.remove(nodo)
-            nodo.pai = None
-            self._tamanho -= quantidadeDeItensRemovidos
+
+        if nodo != 'não encontrado':
+            self._tamanho -= contar(_IteradorPreFixado(nodo))
 
 
     def possuiFilhos(self, item):
         """Retorna true se o item um ou mais filhos, false caso contrário.
-        Exceções
+
+        Erros
            :exception ItemNaoEncontradoErro se o item não for encontrado.
         """
         return len(self._nodo(item).filhos) > 0
@@ -233,7 +243,8 @@ class arvore:
 
     def tamanhoDaSubarvore(self, raiz):
         """Retorna o tamanho da subárvore enraizada em raiz.
-        Exceções
+
+        Erros
            :exception ItemNaoEncontradoErro se o item não for encontrado.
         """
         return contar(_IteradorPreFixado(self._nodo(raiz)))
@@ -440,8 +451,8 @@ class _IteradorInterFixado:
 
 
 class Heap:
-    """Ordem do heap: para qualquer item i da árvore, o pai de i terá uma
-    prioridade maior igual a de i. O elemento no topo do heap é o de mais
+    """Ordem do heap: para qualquer item i da árvore, os filhos de i terão uma
+    prioridade menor igual a de i. O elemento no topo do heap é o de mais
     alta prioridade, e a medida que vamos descendo pelo heap as prioridades
     vão diminuindo (ou pelo menos se manterão constante).
     É possível associar uma prioridade (explicitamente), a cada item na
@@ -459,8 +470,19 @@ class Heap:
            objetos 'prioridade' serão informados.
         """
         self._raiz = None
-        self._maior = comparador
         self._tamanho = 0
+        self._comparador = comparador
+
+
+    def _maior(self, n1: _Nodo, n2: _Nodo):
+        """Retorna o nodo que possui a maior prioridade"""
+        p1 = n1.prioridade
+        p2 = n2.prioridade
+        r = self._comparador(p1, p2)
+
+        if r is IGUAIS:
+            return IGUAIS
+        return n1 if r == p1 else n2
 
 
     @property
@@ -518,6 +540,7 @@ class Heap:
 
     def inserir(self, item, prioridade=NAO_INFORMADO):
         """Insere o item na árvore.
+
         As prioridades dos itens podem ser configuradas explicitamente,
         se este for o caso, então os objetos que representam os objetos
         'prioridade' serão informados ao comparador, se as prioridades não
@@ -617,7 +640,9 @@ class Heap:
 
     def filhos(self, item):
         """Retorna os filhos de um item.
-        :exception ItemNaoEncontradoErro se o item não for encontrado
+
+        Erros
+           :exception ItemNaoEncontradoErro se o item não for localizado.
         """
         return tuple(nodo.item for nodo in self._nodo(item).filhos)
 
@@ -630,7 +655,7 @@ class Heap:
 
     def _upHeapBubbling(self, nodo):
         for anc in _ancestrais(nodo):
-            if self._maior(nodo.prioridade, anc.prioridade) is nodo.prioridade:
+            if self._maior(nodo, anc) is nodo:
                 _permutarNodos(nodo, anc)
                 nodo = anc
 
@@ -646,8 +671,7 @@ class Heap:
 
 
     def remover(self):
-        # remove o item de mais alta prioridade
-        """Remove o item que está no topo do heap.
+        """Remove o item com a maior prioridade.
 
         Erro
            :exception FalhaNaOperacao se o heap estiver vazio.
@@ -686,7 +710,7 @@ class Heap:
             return
 
         filho = self._filhoComPrioridadeMaisAlta(nodo)
-        if self._maior(filho.prioridade, nodo.prioridade) is filho.prioridade:
+        if self._maior(filho, nodo) is filho:
             _permutarNodos(nodo, filho)
             self._downHeapBubbling(filho)
 
@@ -695,13 +719,10 @@ class Heap:
         if _possui1Filho(nodo):
             return nodo.filhos[0]
 
-        esquerdo = nodo.filhos[0]
-        direito = nodo.filhos[1]
-        comparacao = self._maior(esquerdo.prioridade, direito.prioridade)
+        esq = nodo.filhos[0]
+        dir = nodo.filhos[1]
 
-        if comparacao == esquerdo.prioridade or comparacao == IGUAIS:
-            return esquerdo
-        return direito
+        return dir if self._maior(esq, dir) is dir else esq
 
 
     def quantidadeDeFilhos(self, item):
@@ -780,10 +801,9 @@ class ArvoreAVL:
                 return nodo
             return self._localDeInsercao(item, nodo.direito)
 
-        elif nodo.esquerdo is None:
+        if nodo.esquerdo is None:
             return nodo
-        else:
-            return self._localDeInsercao(item, nodo.esquerdo)
+        return self._localDeInsercao(item, nodo.esquerdo)
 
 
     def _primeiroNodoDesbalanceado(self, nodo):
@@ -834,11 +854,10 @@ class ArvoreAVL:
 
     def _filhoMaisAlto(self, nodo):
         """Dentre os filhos do nodo, retorna o mais alto, caso ambos possuam a
-        mesma altura retorna o filho no mesmo lado do pai, ou seja, se p for o
-        pai do nodo e p por sua vez é um filho a esquerda de um outro nodo,
-        então este método retorna o filho a esquerda do nodo, caso p seja um
-        filho a direita de um outro nodo, então este método retorna o
-        filho a direita do nodo."""
+        mesma altura retorna o filho no mesmo lado do pai, ou seja, se nodo
+        for o filho a esquerda de p (p é o pai do nodo) então este método
+        retorna o filho a esquerda do nodo, se nodo for o filho a direita
+        de p, então este método retorna o filho a direita do nodo."""
         filhos = nodo.esquerdo, nodo.direito
 
         alturaEsquerdo = -1 if filhos[0] is None else self._altura(filhos[0])
@@ -872,9 +891,10 @@ class ArvoreAVL:
 
     def _nodo(self, item, funcao=_itemNaoEncontrado):
         nodo = self._raiz
+        saoIguais = lambda i1, i2: self._maior(i1, i2) is IGUAIS
 
         while nodo is not None:
-            if self._saoIguais(nodo.item, item):
+            if saoIguais(nodo.item, item):
                 return nodo
 
             if self._maior(nodo.item, item) is item:
@@ -883,10 +903,6 @@ class ArvoreAVL:
                 nodo = nodo.esquerdo
 
         return funcao()
-
-
-    def _saoIguais(self, item1, item2):
-        return self._maior(item1, item2) is IGUAIS
 
 
     def pai(self, item):

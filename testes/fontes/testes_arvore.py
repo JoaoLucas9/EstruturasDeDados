@@ -136,15 +136,15 @@ def testes_metodo_profundidade():
     assert arvore.profundidade(arvore.raiz) == 0
 
 
+def teste_oMetodo_profundidade_lancaraUmaExcacaoSeOItemNaoForEncontrado():
+    with raises(ItemNaoEncontrado):
+        arvore.profundidade(10)
+
+
 def testes_metodo_altura():
     assert arvore.altura(2) == 0 # item sem filhos
     assert arvore.altura(3) == 2
     assert arvore.altura() == arvore.altura(arvore.raiz) == 3
-
-
-def teste_oMetodo_profundidade_lancaraUmaExcacaoSeOItemNaoForEncontrado():
-    with raises(ItemNaoEncontrado):
-        arvore.profundidade(10)
 
 
 def teste_oMetodo_altura_lancaraUmaExcacaoSeOItemNaoForEncontrado():
