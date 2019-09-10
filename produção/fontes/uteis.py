@@ -8,6 +8,17 @@ Previsível e intuitivo
 Sem surpresas
 Toda melhoria importa
 
+Constantes
+
+   INDEFINIDO: constante de uso geral, pode ser o valor padrão para
+   argumentos de métodos/funções, bem como pode ser o valor retornado.
+
+   NAO_INFORMADO: constante de uso geral, usada principalmente como o valor
+   padrão para argumentos de métodos/funções. A principal diferença entre
+   NAO_INFORMADO e INDEFINIDO é que em alguns a primeira será
+   mais apropriada que a segunda, em outros a segunda será mais interessante,
+   sinta-se livre para usa-las como desejar.
+
 Autor: João Lucas Alves Almeida Santos
 Versão: 0.1
 """

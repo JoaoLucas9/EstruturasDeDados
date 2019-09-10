@@ -3,9 +3,10 @@ from arvore import INDEFINIDO
 from pytest import raises
 from erros import ItemNaoEncontrado, ParametroNaoInformado
 from pyext import naoGeraErro
+from iteruteis import vazio
 
 
-def arvorePronta():
+def arvoreDeTestes():
     umaArvore = Arvore()
     umaArvore.inserir(0)
     umaArvore.inserir(1, 0)
@@ -21,8 +22,8 @@ def arvorePronta():
     return umaArvore
 
 
-def arvoreProntaMaior():
-    umaArvore = arvorePronta()
+def arvoreDeTestes2():
+    umaArvore = arvoreDeTestes()
     umaArvore.inserir(9, None)
     umaArvore.inserir(10, None)
 
@@ -46,7 +47,43 @@ def arvoreProntaMaior():
     return umaArvore
 
 
-arvore = arvorePronta()
+def arvoreParaTestesComItensDuplicados():
+    arvore = Arvore()
+    arvore.inserir('paises')
+    arvore.inserir('br', 'paises')
+    arvore.inserir('en', 'paises')
+    arvore.inserir('eu', 'paises')
+    arvore.inserir('cult', 'en')
+    arvore.inserir('cult', 'eu')
+
+    arvore.inserir('cult', 'br')
+    arvore.inserir('musicas', 'br', 'cult')
+    arvore.inserir('comidas', 'br', 'cult')
+    arvore.inserir('sol', 'br', 'cult', 'musicas')
+    arvore.inserir('chuva', 'musicas')
+    arvore.inserir('feijao', 'comidas')
+
+    arvore.inserir('comidas', 'en')
+    arvore.inserir('musicas', 'en', 'cult')
+    arvore.inserir('help',  'en', 'cult', 'musicas')
+
+    arvore.inserir('musicas', 'eu')
+    arvore.inserir('country', 'eu', 'musicas')
+    arvore.inserir('pop', 'eu', 'musicas')
+    arvore.inserir('1999', 'pop')
+    arvore.inserir('2000', 'pop')
+    arvore.inserir('sweet', '2000')
+    arvore.inserir('happy', '2000')
+    arvore.inserir('comidas', 'eu', 'cult')
+    arvore.inserir('pie', 'eu', 'cult', 'comidas')
+    arvore.inserir('donnuts', 'eu', 'cult', 'comidas')
+    arvore.inserir('burger', 'eu', 'cult', 'comidas')
+
+    return arvore
+
+
+arvore = arvoreDeTestes()
+arvoreD = arvoreParaTestesComItensDuplicados()
 
 
 def testes_metodo_inserir():
@@ -57,42 +94,45 @@ def testes_metodo_inserir():
     numeros.inserir(2, 0)
     numeros.inserir(3, 0)
     assert numeros.filhos(0) == (1, 2, 3)
-    assert numeros.pai(1) == 0
-    assert numeros.pai(2) == 0
-    assert numeros.pai(3) == 0
+    assert numeros.pai(1) is 0
+    assert numeros.pai(2) is 0
+    assert numeros.pai(3) is 0
 
     numeros.inserir(4, 1)
     numeros.inserir(5, 1)
     assert numeros.filhos(1) == (4, 5)
-    assert numeros.pai(4) == 1
-    assert numeros.pai(5) == 1
+    assert numeros.pai(4) is 1
+    assert numeros.pai(5) is 1
 
     numeros.inserir(6, 3)
     numeros.inserir(7, 3)
     assert numeros.filhos(3) == (6, 7)
-    assert numeros.pai(6) == 3
-    assert numeros.pai(7) == 3
+    assert numeros.pai(6) is 3
+    assert numeros.pai(7) is 3
 
     numeros.inserir(None, 6)
     assert numeros.filhos(6) == (None, )
-    assert numeros.pai(None) == 6
+    assert numeros.pai(None) is 6
 
     numeros.inserir(8, 7)
     assert numeros.filhos(7) == (8, )
-    assert numeros.pai(8) == 7
+    assert numeros.pai(8) is 7
 
 
-def testes_oMetodo_inserir_lancaraUmaExcacaoSeOPaiNaoForEncontrado():
+def testes_oMetodo_inserir_geraUmErroSeOItemNaoForEncontrado():
     a = Arvore()
     a.inserir(0)
 
     with raises(ItemNaoEncontrado):
         a.inserir(4, -5)
 
+    with raises(ItemNaoEncontrado):
+        arvoreD.inserir('amor', 'br', 'musicas')
+
 
 def testes_oMetodo_inserir():
     definiraARaizDaArvoreSeOPaiNaoForInformadoEAArvoreEstiverVazia()
-    lancaraUmaExcecaoSeOPaiNaoForInformadoEAArvoreNaoEstiverVazia()
+    geraUmErroSeOPaiNaoForInformadoEAArvoreNaoEstiverVazia()
 
 
 def definiraARaizDaArvoreSeOPaiNaoForInformadoEAArvoreEstiverVazia():
@@ -102,7 +142,7 @@ def definiraARaizDaArvoreSeOPaiNaoForInformadoEAArvoreEstiverVazia():
     assert a.raiz == 0
 
 
-def lancaraUmaExcecaoSeOPaiNaoForInformadoEAArvoreNaoEstiverVazia():
+def geraUmErroSeOPaiNaoForInformadoEAArvoreNaoEstiverVazia():
     a = Arvore()
     a.inserir(0)
 
@@ -136,20 +176,31 @@ def testes_metodo_profundidade():
     assert arvore.profundidade(arvore.raiz) == 0
 
 
-def teste_oMetodo_profundidade_lancaraUmaExcacaoSeOItemNaoForEncontrado():
+def teste_oMetodo_profundidade_geraUmErroSeOItemNaoForEncontrado():
     with raises(ItemNaoEncontrado):
         arvore.profundidade(10)
 
+    with raises(ItemNaoEncontrado):
+        arvoreD.profundidade('1999', 'en', 'cult', 'musicas')
+
+
+def testes_oMetodo_profundidade_geraUmErroSeNenhumItemForInformado():
+    with raises(ParametroNaoInformado):
+        arvore.profundidade()
+
 
 def testes_metodo_altura():
-    assert arvore.altura(2) == 0 # item sem filhos
+    assert arvore.altura(2) == 0
     assert arvore.altura(3) == 2
     assert arvore.altura() == arvore.altura(arvore.raiz) == 3
 
 
-def teste_oMetodo_altura_lancaraUmaExcacaoSeOItemNaoForEncontrado():
+def teste_oMetodo_altura_geraUmErroSeOItemNaoForEncontrado():
     with raises(ItemNaoEncontrado):
         arvore.altura(-10)
+
+    with raises(ItemNaoEncontrado):
+        arvoreD.altura('historia', 'br')
 
 
 def testes_doOperador_in():
@@ -174,7 +225,7 @@ def testes_oMetodo_pai_retornaNoneSeOItemForARaizDaArvore():
     assert arvore.pai(arvore.raiz) is INDEFINIDO
 
 
-def testes_oMetodo_pai_lancaraUmaExcecaoSeOItemNaoForEncontrado():
+def testes_oMetodo_pai_geraUmErroSeOItemNaoForEncontrado():
     with raises(ItemNaoEncontrado):
         arvore.pai(-2)
 
@@ -185,12 +236,20 @@ def testes_metodo_filhos():
     assert arvore.filhos(arvore.raiz) == (1, 2, 3)
 
 
-def testes_oMetodo_filhos_lancaraUmaExcecaoSeOItemNaoForEncontradoNaArvore():
+def testes_oMetodo_filhos_geraUmErroSeOItemNaoForEncontrado():
     with raises(ItemNaoEncontrado):
         arvore.filhos(-2)
 
+    with raises(ItemNaoEncontrado):
+        arvoreD.filhos('comidas', 'en', 'cult')
 
-def testes_propriedade_tamanho_aposInserirAlgunsItensEmUmaArvore():
+
+def testes_oMetodo_filhos_geraUmErroSeNenhumItemForInformado():
+    with raises(ParametroNaoInformado):
+        arvore.filhos()
+
+
+def testes_propriedade_tamanho_aposInserirAlgunsItens():
     numeros = Arvore()
 
     numeros.inserir(0)
@@ -223,13 +282,21 @@ def testes_oMetodo_possuiFilhos_retornaraFalseSeOItemNaoPossuirNenhumFilho():
     assert not arvore.possuiFilhos(None)
 
 
-def testes_oMetodo_possuiFilhos_lancaraUmaExcecaoSeOItemNaoForEncontrado():
+def testes_oMetodo_possuiFilhos_geraUmErroSeOItemNaoForEncontrado():
     with raises(ItemNaoEncontrado):
         arvore.possuiFilhos(-7)
 
+    with raises(ItemNaoEncontrado):
+        arvoreD.possuiFilhos('futebol', 'paises', 'en')
+
+
+def testes_oMetodo_possuiFilhos_geraUmErroSeNenhumItemForInformado():
+    with raises(ParametroNaoInformado):
+        arvore.possuiFilhos()
+
 
 def testes_metodo_remover():
-    numeros = arvorePronta()
+    numeros = arvoreDeTestes()
     numeros.remover(1)
 
     assert numeros.filhos(numeros.raiz) == (2, 3)
@@ -246,14 +313,19 @@ def testes_metodo_remover():
 
 
 def testes_oMetodo_remover_naoLancaraExcecaoSeOItemNaoForEncontrado():
-    numeros = arvorePronta()
+    numeros = arvoreDeTestes()
 
     with naoGeraErro():
         numeros.remover(-4)
 
 
+def testes_oMetodo_remover_geraUmErroSeNenhumItemForInformado():
+    with raises(ParametroNaoInformado):
+        arvore.remover()
+
+
 def testes_propriedade_tamanho_aposRemoverAlgunsItensDeUmaArvore():
-    numeros = arvorePronta()
+    numeros = arvoreDeTestes()
     numeros.remover(None)
 
     assert numeros.tamanho == 9
@@ -267,47 +339,50 @@ def testes_propriedade_tamanho_aposRemoverAlgunsItensDeUmaArvore():
     assert numeros.tamanho == 0
 
 
-def testes_oMetodo_tamanhoDaSubarvore():
-    retornaOTamanhoDaSubarvoreEnraizadaNoItemInformado()
-    lancaUmaExcecaoSeOItemInformadoNaoForEncontrado()
-
-
-def retornaOTamanhoDaSubarvoreEnraizadaNoItemInformado():
+def testes_metodo_tamanhoDaSubarvore():
     assert arvore.tamanhoDaSubarvore(3) == 5
     assert arvore.tamanhoDaSubarvore(1) == 3
     assert arvore.tamanhoDaSubarvore(2) == 1
     assert arvore.tamanhoDaSubarvore(arvore.raiz) == 10
 
 
-def lancaUmaExcecaoSeOItemInformadoNaoForEncontrado():
+def testes_metodo_tamanhoDaSubarvore_geraUmErroSeOItemNaoForEncontrado():
     with raises(ItemNaoEncontrado):
         arvore.tamanhoDaSubarvore(-8)
+
+    with raises(ItemNaoEncontrado):
+        arvoreD.tamanhoDaSubarvore('amor', 'musicas')
+
+
+def testes_oMetodo_tamanhoDaSubarvore_geraUmErroSeNenhumItemForInformado():
+    with raises(ParametroNaoInformado):
+        arvore.tamanhoDaSubarvore()
 
 
 def testes_doIteradorPosFixadoPrivado():
     from arvore import _IteradorPosFixado
-    nodo = arvore._nodo(1)
+    nodo = arvore._nodo([1])
 
     assert [n.item for n in _IteradorPosFixado(nodo)] == [4, 5, 1]
 
-    nodo = arvore._nodo(3)
+    nodo = arvore._nodo([3])
 
     assert [n.item for n in _IteradorPosFixado(nodo)] == [None, 6, 8, 7, 3]
 
 
 def testes_doIteradorPreFixadoPrivado():
     from arvore import _IteradorPreFixado
-    nodo = arvore._nodo(1)
+    nodo = arvore._nodo([1])
 
     assert [n.item for n in _IteradorPreFixado(nodo)] == [1, 4, 5]
 
-    nodo = arvore._nodo(3)
+    nodo = arvore._nodo([3])
 
     assert [n.item for n in _IteradorPreFixado(nodo)] == [3, 6, None, 7, 8]
 
 
 def testes_oMetodo_nivel_retornaraTodosOsItensDeUmNivel():
-    nums = arvoreProntaMaior()
+    nums = arvoreDeTestes2()
 
     assert list(nums.nivel(0)) == [0]
     assert list(nums.nivel(2)) == [4, 5, 6, 7]
@@ -317,11 +392,150 @@ def testes_oMetodo_nivel_retornaraTodosOsItensDeUmNivel():
 
 def testes_doIteradorPorNivel():
     from arvore import _IteradorPorNivel as Iterador
-    nums = arvoreProntaMaior()
+    nums = arvoreDeTestes2()
     raiz = nums._raiz
 
     assert [nodo.item for nodo in Iterador(raiz, 2)] == [4, 5, 6, 7]
     assert [nodo.item for nodo in Iterador(raiz, 3)] == [None, 8]
     assert [nodo.item for nodo in Iterador(raiz, 5)] == [13, 14, 15, 16, 17,
                                                          18, 19, 20, 21, 22]
+
+
+def testes_metodo_filhos_caminhoComecandoNaRaiz():
+    assert arvoreD.filhos('paises', 'en') == ('cult', 'comidas')
+    assert arvoreD.filhos('paises', 'eu', 'cult', 'comidas') == \
+           ('pie', 'donnuts', 'burger')
+
+    assert arvoreD.filhos('paises', 'br', 'cult', 'musicas') == ('sol',
+                                                                 'chuva')
+
+
+def testes_metodo_filhos_caminhoNaoComecaNaRaiz():
+    assert arvoreD.filhos('musicas', 'pop') == ('1999', '2000')
+    assert arvoreD.filhos('br', 'cult', 'comidas') == ('feijao', )
+    assert vazio(arvoreD.filhos('musicas', 'help'))
+
+
+def testes_metodo_profundidade_caminhoComecandoNaRaiz():
+    assert arvoreD.profundidade('paises', 'en', 'comidas') is 2
+
+
+def testes_metodo_profundidade_caminhoNaoComecaNaRaiz():
+    assert arvoreD.profundidade('eu', 'cult', 'comidas') is 3
+    assert arvoreD.profundidade('comidas', 'feijao') is 4
+
+
+def testes_metodo_altura_caminhoComecandoNaRaiz():
+    assert arvoreD.altura('paises', 'eu', 'musicas', 'country') is 0
+    assert arvoreD.altura('paises', 'eu', 'musicas') is 3
+
+
+def testes_metodo_altura_caminhoNaoComecaNaRaiz():
+    assert arvoreD.altura('musicas', 'sol') is 0
+    assert arvoreD.altura('br', 'cult', 'musicas') is 1
+
+
+def testes_metodo_possuiFilhos_caminhoComecandoNaRaiz():
+    assert arvoreD.possuiFilhos('paises', 'br', 'cult')
+    assert not arvoreD.possuiFilhos('paises', 'eu', 'musicas', 'country')
+
+
+def testes_metodo_possuiFilhos_caminhoNaoComecaNaRaiz():
+    assert arvoreD.possuiFilhos('eu', 'cult', 'comidas')
+    assert not arvoreD.possuiFilhos('en', 'comidas')
+
+
+def testes_metodo_tamanhoDaSubarvore_caminhoComecandoNaRaiz():
+    assert arvoreD.tamanhoDaSubarvore('paises', 'eu', 'musicas') is 7
+    assert arvoreD.tamanhoDaSubarvore('paises', 'en', 'comidas') is 1
+
+
+def testes_metodo_tamanhoDaSubarvore_caminhoNaoComecaNaRaiz():
+    assert arvoreD.tamanhoDaSubarvore('br', 'cult', 'musicas') is 3
+    assert arvoreD.tamanhoDaSubarvore('en', 'cult', 'musicas') is 2
+
+
+def testes_metodo_inserir_inserirItensDuplicados():
+    arvore = Arvore()
+    arvore.inserir('paises')
+    arvore.inserir('br', 'paises')
+    arvore.inserir('en', 'paises')
+    arvore.inserir('eu', 'paises')
+    arvore.inserir('cult', 'br')
+    arvore.inserir('cult', 'en')
+    arvore.inserir('cult', 'eu')
+
+    arvore.inserir('musicas', 'br', 'cult')
+    arvore.inserir('comidas', 'br', 'cult')
+
+    assert arvore.filhos('br', 'cult') == ('musicas', 'comidas')
+    assert vazio(arvore.filhos('en', 'cult'))
+    assert vazio(arvore.filhos('eu', 'cult'))
+
+    arvore.inserir('comidas', 'en')
+    arvore.inserir('comidas', 'eu', 'cult')
+    arvore.inserir('pie', 'eu', 'cult', 'comidas')
+    arvore.inserir('burger', 'eu', 'cult', 'comidas')
+
+    assert vazio(arvore.filhos('br', 'cult', 'comidas'))
+    assert vazio(arvore.filhos('en', 'comidas'))
+    assert arvore.filhos('eu', 'cult', 'comidas') == ('pie', 'burger')
+
+    arvore.inserir('musicas', 'paises', 'en', 'cult')
+    arvore.inserir('help', 'en', 'cult', 'musicas')
+
+    assert arvore.filhos('en', 'cult', 'musicas') == ('help', )
+
+    arvore.inserir('musicas', 'eu')
+    arvore.inserir('country', 'eu', 'musicas')
+    arvore.inserir('pop', 'eu', 'musicas')
+
+    assert arvore.filhos('eu', 'musicas') == ('country', 'pop')
+
+    arvore.inserir('1999', 'paises', 'eu', 'musicas', 'pop')
+    arvore.inserir('2000', 'pop')
+
+    assert arvore.filhos('paises') == ('br', 'en', 'eu')
+    assert arvore.filhos('br') == ('cult', )
+    assert arvore.filhos('br', 'cult') == ('musicas', 'comidas')
+    assert vazio(arvore.filhos('br', 'cult', 'musicas'))
+    assert vazio(arvore.filhos('br', 'cult', 'comidas'))
+
+    assert arvore.filhos('en') == ('cult', 'comidas')
+    assert arvore.filhos('en', 'cult') == ('musicas', )
+    assert arvore.filhos('en', 'cult', 'musicas') == ('help', )
+    assert vazio(arvore.filhos('en', 'comidas'))
+
+    assert arvore.filhos('eu') == ('cult', 'musicas')
+    assert arvore.filhos('eu', 'cult') == ('comidas', )
+    assert arvore.filhos('eu', 'cult', 'comidas') == ('pie', 'burger')
+    assert arvore.filhos('eu', 'musicas') == ('country', 'pop')
+    assert arvore.filhos('pop') == ('1999', '2000')
+    assert vazio(arvore.filhos('pie'))
+    assert vazio(arvore.filhos('burger'))
+    assert vazio(arvore.filhos('1999'))
+    assert vazio(arvore.filhos('2000'))
+    assert vazio(arvore.filhos('country'))
+
+
+def testes_metodo_remover_deUmaArvoreQuePossuiItensDuplicados():
+    arvore = arvoreParaTestesComItensDuplicados()
+    arvore.remover('br', 'cult', 'comidas')
+
+    assert arvore.filhos('br', 'cult') == ('musicas', )
+    assert arvore.filhos('en') == ('cult', 'comidas')
+    assert arvore.filhos('eu', 'cult') == ('comidas', )
+
+    arvore.remover('en', 'cult', 'musicas')
+
+    assert vazio(arvore.filhos('en', 'cult'))
+    assert arvore.filhos('br', 'cult') == ('musicas', )
+    assert arvore.filhos('eu') == ('cult', 'musicas')
+
+    arvore.remover('eu', 'cult')
+
+    assert arvore.filhos('eu') == ('musicas', )
+    assert arvore.filhos('en') == ('cult', 'comidas')
+    assert arvore.filhos('br') == ('cult', )
+
 

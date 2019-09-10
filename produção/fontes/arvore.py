@@ -3,15 +3,6 @@ de um Heap.
 
 Constantes
 
-   INDEFINIDO: constante de uso geral, pode ser o valor padrão para
-   argumentos de métodos/funções, bem como pode ser o valor retornado.
-
-   NAO_INFORMADO: constante de uso geral, usada principalmente como o valor
-   padrão para argumentos de métodos/funções. A principal diferença entre
-   NAO_INFORMADO e INDEFINIDO é que em alguns a primeira será
-   mais apropriada que a segunda, em outros a segunda será mais interessante,
-   sinta-se livre para usa-las como desejar.
-
    IGUAIS: utilizada por comparadores para informar que os objetos/valores
    comparados são iguais.
 
@@ -29,6 +20,8 @@ from erros import ItemNaoEncontrado, ParametroNaoInformado, FalhaNaOperacao, \
     ColecaoVazia
 from iteruteis import tamanho as contar
 from uteis import IteradorVazio, NAO_INFORMADO, INDEFINIDO
+from iteruteis import vazio
+from itertools import zip_longest
 
 
 def _itemNaoEncontrado():
@@ -64,21 +57,34 @@ def _permutarNodos(nodo1, nodo2):
         nodo2.prioridade = p
 
 
+def _parametroNaoInformado(b, parametro):
+    if b:
+        raise ParametroNaoInformado(parametro)
+
+
 IGUAIS = 'as prioridades são iguais_Recife_PE 01/07/2019 14:42h'
 PRETO = 0
 VERMELHO = 1
 
 
 class arvore:
-    """Árvore genérica não ordenada."""
+    """Árvore genérica não ordenada.
+
+    Muitos métodos possuem um argumento 'caminho', definido como segue:
+    sequência de zero ou mais itens, em ordem, que leva até um item específico
+    da árvore. Pode começar na raiz ou de qualquer outro lugar da árvore.
+    Muitos métodos exigem que o caminho possua ao menos um item.
+    """
 
     def __init__(self):
         self._raiz = None
         self._tamanho = 0
 
+
     @property
     def raiz(self):
-        """A raiz da árvore.
+        """Raiz da árvore.
+
         Escrita: ✗
         """
 
@@ -88,6 +94,7 @@ class arvore:
     @property
     def tamanho(self):
         """Quantidade de itens na árvore.
+
         Escrita: ✗
         """
         return self._tamanho
@@ -102,34 +109,55 @@ class arvore:
         return self._raiz is None
 
 
-    def inserir(self, item, pai=NAO_INFORMADO):
+    def inserir(self, item, *caminho):
         """Insere o item na árvore.
 
         Parâmetros
-           :param item -> o item que será inserido
+           :param item o item que será inserido
 
-           :param pai -> o pai do item, se a árvore estiver vazia ele não
-           precisa ser informado, caso contrário, deve ser especificado.
+           :param caminho o último item do caminho será o pai do item inserido
 
         Exceções
-           :exception ItemNaoEncontradoErro se o pai não for encontrado na
-           árvore.
+           :exception ItemNaoEncontrado se o pai não for encontrado na árvore.
 
-           :exception ParametroNaoEspecificadoErro se a árvore não estiver
+           :exception ParametroNaoEspecificado se a árvore não estiver
            vazia e o pai não tiver sido informado.
         """
         nodo = _Nodo(item)
 
-        if pai is NAO_INFORMADO:
-            if not self.vazia:
-                raise ParametroNaoInformado('pai')
+        if vazio(caminho):
+            _parametroNaoInformado(not self.vazia, 'caminho')
             self._raiz = nodo
         else:
-            pai = self._nodo(pai)
+            pai = self._nodo(caminho)
             pai.filhos.append(nodo)
             nodo.pai = pai
 
         self._tamanho += 1
+
+
+    def _nodo(self, caminho, funcao=_itemNaoEncontrado):
+        """:param caminho tupla ou lista de um ou mais itens, em ordem, que
+        leva até um item específico da árvore que será retornado"""
+        item = caminho[-1]
+        caminho = caminho[:-1]
+
+        for nodo in self._nodos(item):
+            for i, n in zip_longest(reversed(caminho), _ancestrais(nodo),
+                                    fillvalue='fim'):
+                if i is 'fim':
+                    return nodo
+                if n is 'fim' or i != n.item:
+                    break
+            else:
+                return nodo
+
+        return funcao()
+
+
+    def _nodos(self, item):
+        """Retorna todos os nodos que possuem o item informado"""
+        return (n for n in _IteradorPreFixado(self._raiz) if n.item == item)
 
 
     def __iter__(self):
@@ -146,50 +174,37 @@ class arvore:
         return _Iterador(_IteradorPreFixado(self._raiz))
 
 
-    def profundidade(self, item):
-        """Retorna a profundidade do item.
+    def profundidade(self, *caminho):
+        """Retorna a profundidade do último item do caminho.
+
+        Exemplo: arvore.filhos(a, b, c), será retornada a profundidade de c.
 
         Erros
-           :exception ItemNaoEncontradoErro se o item não for localizado.
+           :exception ItemNaoEncontrado se o item não for localizado.
+
+           :exception ParametroNaoInformado se nenhum item for informado
         """
-        return contar(_ancestrais(self._nodo(item)))
+        _parametroNaoInformado(vazio(caminho), 'caminho')
+
+        return contar(_ancestrais(self._nodo(caminho)))
 
 
-    def _nodo(self, item, funcao=_itemNaoEncontrado):
-        """Procura por um nodo cujo item seja igual ao parâmetro item.
+    def altura(self, *caminho):
+        """Retorna a altura do último item do caminho na árvore, se o item
+        não for informado será retornada a altura da árvore.
 
-        Parâmetros
-           :param item o alvo desta operação
+        Exemplo: arvore.filhos(a, b, c), será retornada a altura de c.
 
-           :param funcao a função que será invocada caso nenhum nodo seja
-           encontrado.
-
-        :return o nodo encontrado.
-        Caso nenhum nodo seja encontrado, então retorna-se o resultado da
-        função, 'return funcao()'.
-        Pode-se retornar um valor padrão ou gerar um erro, por exemplo.
         """
-        for nodo in _IteradorPreFixado(self._raiz):
-            if nodo.item == item:
-                return nodo
+        n = self._raiz if vazio(caminho) else self._nodo(caminho)
 
-        return funcao()
+        return self._altura(n)
 
 
-    def altura(self, item=NAO_INFORMADO):
-        """Retorna a altura do item na árvore, se o item não for informado
-        será retornada a altura da árvore."""
-        filhos = self._filhos(self.raiz if item is NAO_INFORMADO else item)
-
-        if len(filhos) == 0:
+    def _altura(self, nodo):
+        if not _possuiFilhos(nodo):
             return 0
-        return max(self.altura(f) for f in filhos) +1
-
-
-    def _filhos(self, item):
-        if isinstance(item, _Nodo):
-            return item.filhos
-        return self._nodo(item).filhos
+        return max(self._altura(f) for f in nodo.filhos) + 1
 
 
     def pai(self, item):
@@ -198,29 +213,40 @@ class arvore:
         Retorna a constante uteis.INDEFINIDO se o item informado for a raiz.
 
         Erros
-           :exception ItemNaoEncontradoErro se o item não for encontrado
+           :exception ItemNaoEncontrado se o item não for encontrado
         """
-        nodo = self._nodo(item)
+        nodo = self._nodo([item])
 
-        return INDEFINIDO if nodo.pai is None else self._nodo(item).pai.item
+        return INDEFINIDO if nodo.pai is None else nodo.pai.item
 
 
-    def filhos(self, item):
-        """Retorna os filhos de um item.
+    def filhos(self, *caminho):
+        """Retorna uma tupla com os filhos do último item do caminho.
+
+        Exemplo: arvore.filhos(a, b, c), serão retornados os filhos de c.
+
+       Erros
+           :exception ItemNaoEncontrado se o item não for localizado.
+
+           :exception ParametroNaoInformado se nenhum item for informado
+        """
+        _parametroNaoInformado(vazio(caminho), 'caminho')
+
+        return tuple(nodo.item for nodo in self._nodo(caminho).filhos)
+
+
+    def remover(self, *caminho):
+        """Remove a subárvore enraizada no último item do caminho.
+
+        O método retorna normalmente se o item não for encontrado.
+
+        Exemplo: arvore.filhos(a, b, c), a árvore enraizada em c será removida.
 
         Erros
-           :exception ItemNaoEncontradoErro se o item não for localizado.
+           :exception ParametroNaoInformado se nenhum item for informado
         """
-        return tuple(nodo.item for nodo in self._nodo(item).filhos)
-
-
-    def remover(self, item):
-        """Remove a subárvore enraizada em item.
-
-        Caso o item não seja encontrado, o método retorna normalmente,
-        sem gerar erro.
-        """
-        nodo = self._nodo(item, lambda : 'não encontrado')
+        _parametroNaoInformado(vazio(caminho), 'caminho')
+        nodo = self._nodo(caminho, lambda : 'não encontrado')
 
         if nodo is self._raiz:
             self._raiz = None
@@ -232,22 +258,37 @@ class arvore:
             self._tamanho -= contar(_IteradorPreFixado(nodo))
 
 
-    def possuiFilhos(self, item):
-        """Retorna true se o item um ou mais filhos, false caso contrário.
+    def possuiFilhos(self, *caminho):
+        """Retorna true se o último item do caminho possuir um ou mais filhos,
+        false caso contrário.
+
+        Exemplo: arvore.filhos(a, b, c), retorna true se c possuir filhos,
+        false caso contrário.
 
         Erros
-           :exception ItemNaoEncontradoErro se o item não for encontrado.
+           :exception ItemNaoEncontrado se o item não for encontrado.
+
+           :exception ParametroNaoInformado se nenhum item for informado
         """
-        return len(self._nodo(item).filhos) > 0
+        _parametroNaoInformado(vazio(caminho), 'caminho')
+
+        return len(self._nodo(caminho).filhos) > 0
 
 
-    def tamanhoDaSubarvore(self, raiz):
-        """Retorna o tamanho da subárvore enraizada em raiz.
+    def tamanhoDaSubarvore(self, *caminho):
+        """Retorna o tamanho da subárvore enraizada no último item do caminho.
+
+        Exemplo: arvore.filhos(a, b, c), retorna o tamanho da árvore
+        enraizada em c.
 
         Erros
-           :exception ItemNaoEncontradoErro se o item não for encontrado.
+           :exception ItemNaoEncontrado se o item não for encontrado.
+
+           :exception ParametroNaoInformado se nenhum item for informado
         """
-        return contar(_IteradorPreFixado(self._nodo(raiz)))
+        _parametroNaoInformado(vazio(caminho), 'caminho')
+
+        return contar(_IteradorPreFixado(self._nodo(caminho)))
 
 
     def nivel(self, d):
@@ -388,7 +429,7 @@ class ArvoreBinaria(arvore):
            O pai deve possuir menos de 2 filhos.
 
         Exceções
-           :exception ItemNaoEncontradoErro se o pai não for encontrado na
+           :exception ItemNaoEncontrado se o pai não for encontrado na
            árvore.
 
            :exception ParametroNaoEspecificadoErro se a árvore não estiver
@@ -612,7 +653,7 @@ class Heap:
         :return arvore.INDEFINIDO se o item for a raiz da árvore.
 
         Exceções
-           :exception ItemNaoEncontradoErro se o item não for encontrado
+           :exception ItemNaoEncontrado se o item não for encontrado
         """
         return INDEFINIDO if item == self.topo else self._nodo(item).pai.item
 
@@ -642,7 +683,7 @@ class Heap:
         """Retorna os filhos de um item.
 
         Erros
-           :exception ItemNaoEncontradoErro se o item não for localizado.
+           :exception ItemNaoEncontrado se o item não for localizado.
         """
         return tuple(nodo.item for nodo in self._nodo(item).filhos)
 
@@ -909,7 +950,7 @@ class ArvoreAVL:
         """Retorna o pai de um item.
 
         Erros
-           :exception ItemNaoEncontradoErro se o item não for encontrado
+           :exception ItemNaoEncontrado se o item não for encontrado
         """
         nodo = self._nodo(item)
 
@@ -920,7 +961,7 @@ class ArvoreAVL:
         """Retorna os filhos de um item.
 
         Erros
-           :exception ItemNaoEncontradoErro se o item não for encontrado
+           :exception ItemNaoEncontrado se o item não for encontrado
         """
         return tuple(nodo.item for nodo in self._nodo(item).filhos)
 
@@ -1319,7 +1360,7 @@ class ArvoreVP:
         """Retorna o pai de um item.
 
         Erros
-           :exception ItemNaoEncontradoErro se o item não for encontrado
+           :exception ItemNaoEncontrado se o item não for encontrado
         """
         nodo = self._nodo(item)
 
@@ -1330,7 +1371,7 @@ class ArvoreVP:
         """Retorna os filhos de um item.
 
         Erros
-           :exception ItemNaoEncontradoErro se o item não for encontrado
+           :exception ItemNaoEncontrado se o item não for encontrado
         """
         return tuple(nodo.item for nodo in self._nodo(item).filhos)
 
@@ -1384,7 +1425,7 @@ class ArvoreVP:
         """Retorna a profundidade preta do item.
 
         Erros
-           :exception dispara um ItemNaoEncontradoErro se o item não for
+           :exception dispara um ItemNaoEncontrado se o item não for
            localizado.
         """
         nodo = self._nodo(item)
@@ -1398,7 +1439,7 @@ class ArvoreVP:
         """Remove o item da árvore.
 
         Erros
-           :exception ItemNaoEncontradoErro se o item não for localizado.
+           :exception ItemNaoEncontrado se o item não for localizado.
         """
         if self._saoIguais(item, self.raiz):
             self._removerRaiz()
