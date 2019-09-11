@@ -292,10 +292,7 @@ class arvore:
 
 
     def nivel(self, d):
-        """Itera pelos nodos do nível d da árvore.
-
-        :return um iterador que itera por todos os nodos no nível d.
-        """
+        """Retorna um iterador que itera por todos os nodos no nível d."""
         return _Iterador(_IteradorPorNivel(self._raiz, d))
 
 
@@ -418,28 +415,27 @@ class ArvoreBinaria(arvore):
         super().__init__()
 
 
-    def inserir(self, item, pai=NAO_INFORMADO):
+    def inserir(self, item, *caminho):
         """Insere o item na árvore.
 
         Parâmetros
-           :param item -> o item que será inserido
+           :param item o item que será inserido
 
-           :param pai -> o pai do item, se a árvore estiver vazia ele não
-           precisa ser informado, caso contrário, deve ser especificado.
+           :param caminho o último item do caminho será o pai do item inserido
            O pai deve possuir menos de 2 filhos.
 
         Exceções
            :exception ItemNaoEncontrado se o pai não for encontrado na
            árvore.
 
-           :exception ParametroNaoEspecificadoErro se a árvore não estiver
+           :exception ParametroNaoEspecificado se a árvore não estiver
            vazia e o pai não tiver sido informado.
 
            :exception FalhaNaOperacao se o pai já possuir 2 filhos.
         """
-        if pai != NAO_INFORMADO and len(super().filhos(pai)) == 2:
-            raise FalhaNaOperacao(f'{pai} já possui 2 filhos.')
-        super().inserir(item, pai)
+        if not vazio(caminho) and len(super().filhos(*caminho)) == 2:
+            raise FalhaNaOperacao(f'{caminho[-1]} já possui 2 filhos.')
+        super().inserir(item, *caminho)
 
 
     def interFixado(self):
@@ -528,7 +524,8 @@ class Heap:
 
     @property
     def topo(self):
-        """A raiz da árvore.
+        """Item no topo do heap
+
         Escrita: ✗
 
         Erro
@@ -549,7 +546,7 @@ class Heap:
 
         while nodo is not None:
             niveis += 1
-            nodo = None if len(nodo.filhos) is 0 else nodo.filhos[0]
+            nodo = None if not _possuiFilhos(nodo) else nodo.esquerdo
 
         return niveis
 
@@ -558,6 +555,7 @@ class Heap:
     def ultimoNivel(self):
         """Último nível da árvore, se ela estiver vazia então o seu valor será
         arvore.INDEFINIDO.
+
         Escrita: ✗
         """
         return INDEFINIDO if self.vazio else self.niveis - 1
@@ -566,6 +564,7 @@ class Heap:
     @property
     def vazio(self):
         """True se o heap estiver vazio, false caso contrário.
+
         Escrita: ✗
         """
         return self.tamanho is 0
@@ -573,7 +572,8 @@ class Heap:
 
     @property
     def tamanho(self):
-        """Quantidade de itens na árvore.
+        """Quantidade de itens no heap.
+
         Escrita: ✗
         """
         return self._tamanho
@@ -595,7 +595,8 @@ class Heap:
 
            :param prioridade a prioridade do item, opcional.
         """
-        nodo = self._nodoPrioritario(item, prioridade)
+        nodo = _NodoBin(item)
+        nodo.prioridade = item if prioridade == NAO_INFORMADO else prioridade
 
         if self.vazio:
             self._raiz = nodo
@@ -606,24 +607,31 @@ class Heap:
         self._tamanho += 1
 
 
-    def _nodoPrioritario(self, item, prioridade):
-        nodo = _Nodo(item)
-        nodo.prioridade = item if prioridade == NAO_INFORMADO else prioridade
-
-        return nodo
-
-
-    def _inserirNodoNaArvore(self, nodo, pai):
-        pai.filhos.append(nodo)
-        nodo.pai = pai
-
-
     def _econtrarLocalDeInsercao(self):
         for nodo in _IteradorPorNivel(self._raiz, self.ultimoNivel - 1):
             if not _possui2Filhos(nodo):
                 return nodo
 
         return self._extremaEsquerda()
+
+
+    def _extremaEsquerda(self):
+        """Descer o máximo que puder e retornar o _Nodo que está lá na
+        extrema esquerda."""
+        return next(_IteradorPosFixado(self._raiz))
+
+
+    def _inserirNodoNaArvore(self, nodo, pai):
+        setattr(pai, 'esquerdo' if pai.esquerdo is None else 'direito', nodo)
+        nodo.pai = pai
+
+
+    def _upHeapBubbling(self, nodo):
+        """:param nodo o nodo que acabou de ser inserido na árvore"""
+        for n in _ancestrais(nodo):
+            if self._maior(nodo, n) is nodo:
+                _permutarNodos(nodo, n)
+                nodo = n
 
 
     def __iter__(self):
@@ -688,19 +696,6 @@ class Heap:
         return tuple(nodo.item for nodo in self._nodo(item).filhos)
 
 
-    def _extremaEsquerda(self):
-        """Descer o máximo que puder e retornar o _Nodo que está lá na
-        extrema esquerda."""
-        return next(_IteradorPosFixado(self._raiz))
-
-
-    def _upHeapBubbling(self, nodo):
-        for anc in _ancestrais(nodo):
-            if self._maior(nodo, anc) is nodo:
-                _permutarNodos(nodo, anc)
-                nodo = anc
-
-
     def ancestrais(self, item):
         """Retorna um iterador que percorre o caminho item-raiz, visitando
         todos os ancestrais do item, excluindo o própio item.
@@ -741,7 +736,8 @@ class Heap:
         if nodo is self._raiz:
             self._raiz = None
         else:
-            nodo.pai.filhos.remove(nodo)
+            pai = nodo.pai
+            setattr(pai, 'direito' if pai.direito is nodo else 'esquerdo', None)
 
         return nodo
 
@@ -758,10 +754,10 @@ class Heap:
 
     def _filhoComPrioridadeMaisAlta(self, nodo):
         if _possui1Filho(nodo):
-            return nodo.filhos[0]
+            return nodo.esquerdo
 
-        esq = nodo.filhos[0]
-        dir = nodo.filhos[1]
+        esq = nodo.esquerdo
+        dir = nodo.direito
 
         return dir if self._maior(esq, dir) is dir else esq
 
@@ -773,6 +769,36 @@ class Heap:
            :exception ItemNaoEncontrado se o item não for encontrado.
         """
         return len(self._nodo(item).filhos)
+
+
+    def nivel(self, d):
+        """Retorna um gerador que itera por todos os nodos no nível d.
+
+        Se d for maior que o último nível do heap, exemplo, o último nível do
+        heap é 3 e d é 4, ou se d for negativo, será retornado um gerador
+        vazio.
+        """
+        if d < 0 or d > self.niveis -1:
+            return IteradorVazio()
+        return (n.item for n in _IteradorPorNivel(self._raiz, d))
+
+
+class _NodoBin:
+
+    def __init__(self, item, pai=None, esquerdo=None, direito=None):
+        self.item = item
+        self.pai = pai
+        self.esquerdo = esquerdo
+        self.direito = direito
+
+
+    @property
+    def filhos(self):
+        if self.esquerdo is not None and self.direito is not None:
+            return self.esquerdo, self.direito
+        if self.esquerdo is None and self.direito is None:
+            return tuple()
+        return self.esquerdo if self.esquerdo is not None else self.direito,
 
 
 class ArvoreAVL:
@@ -1144,24 +1170,6 @@ class ArvoreAVL:
         if nodo is None:
             raise FalhaNaOperacao(f'{item} não possui filho a direita.')
         return nodo.item
-
-
-class _NodoBin:
-
-    def __init__(self, item, pai=None, esquerdo=None, direito=None):
-        self.item = item
-        self.pai = pai
-        self.esquerdo = esquerdo
-        self.direito = direito
-
-
-    @property
-    def filhos(self):
-        if self.esquerdo is not None and self.direito is not None:
-            return self.esquerdo, self.direito
-        if self.esquerdo is None and self.direito is None:
-            return tuple()
-        return self.esquerdo if self.esquerdo is not None else self.direito,
 
 
 class ArvoreVP:

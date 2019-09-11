@@ -1,10 +1,12 @@
-from arvore import Heap, INDEFINIDO, IGUAIS
+from arvore import Heap, INDEFINIDO, IGUAIS, _Nodo, _IteradorPorNivel, \
+    _IteradorPosFixado
 from pytest import raises
 from erros import ItemNaoEncontrado, FalhaNaOperacao
 from pyext import naoGeraErro
+from iteruteis import vazio
 
 
-def arvorePronta():
+def heapDeTestes():
     nums = Heap(lambda x1, x2: IGUAIS if x1 == x2 else max(x1, x2))
     nums.inserir(0)
     nums.inserir(1)
@@ -19,11 +21,7 @@ def arvorePronta():
     return nums
 
 
-def arvoreVazia():
-    return Heap(None)
-
-
-arvore = arvorePronta()
+heap = heapDeTestes()
 
 
 def testes_oMetodo_inserir_definiraARaizDaArvoreSeElaEstiverVazia():
@@ -38,70 +36,54 @@ def testes_metodo_inserir():
 
     heap.inserir(0)
     heap.inserir(1)
-
-    assert heap.pai(0) is 1
-    assert heap.filhos(0) == tuple()
-    assert heap.filhos(1) == (0,)
+    assegureQueEUmHeap(heap)
 
     heap.inserir(2)
-
-    assert heap.pai(0) is heap.pai(1) is 2
-    assert heap.filhos(0) == heap.filhos(1) == tuple()
-    assert heap.filhos(2) == (0, 1)
+    assegureQueEUmHeap(heap)
 
     heap.inserir(3)
-
-    assert heap.filhos(3) == (2, 1)
-    assert heap.filhos(2) == (0, )
-    assert heap.filhos(0) == heap.filhos(1) == tuple()
-    assert heap.pai(2) is heap.pai(1) is 3
-    assert heap.pai(0) is 2
+    assegureQueEUmHeap(heap)
 
     heap.inserir(4)
-
-    assert heap.filhos(4) == (3, 1)
-    assert heap.filhos(3) == (0, 2)
-    assert heap.filhos(0) == heap.filhos(2) == heap.filhos(1) == tuple()
-    assert heap.pai(3) is heap.pai(1) is 4
-    assert heap.pai(0) is heap.pai(2) is 3
+    assegureQueEUmHeap(heap)
 
     heap.inserir(5)
-
-    assert heap.filhos(5) == (3, 4)
-    assert heap.filhos(3) == (0, 2)
-    assert heap.filhos(4) == (1,)
-    assert heap.filhos(0) == heap.filhos(2) == heap.filhos(1) == tuple()
-    assert heap.pai(3) is heap.pai(4) is 5
-    assert heap.pai(0) is heap.pai(2) is 3
-    assert heap.pai(1) is 4
+    assegureQueEUmHeap(heap)
 
     heap.inserir(6)
-
-    assert heap.filhos(6) == (3, 5)
-    assert heap.filhos(3) == (0, 2)
-    assert heap.filhos(5) == (1, 4)
-    assert heap.filhos(0) == heap.filhos(2) == heap.filhos(1) == \
-           heap.filhos(4) == tuple()
-    assert heap.pai(3) is heap.pai(5) is 6
-    assert heap.pai(0) is heap.pai(2)is 3
-    assert heap.pai(1) is heap.pai(4) is 5
+    assegureQueEUmHeap(heap)
 
     heap.inserir(7)
+    assegureQueEUmHeap(heap)
 
-    assert heap.filhos(7) == (6, 5)
-    assert heap.filhos(6) == (3, 2)
-    assert heap.filhos(5) == (1, 4)
-    assert heap.filhos(3) == (0,)
-    assert heap.filhos(0) == heap.filhos(2) == heap.filhos(1) == \
-           heap.filhos(4) == tuple()
-    assert heap.pai(6) is heap.pai(5) is 7
-    assert heap.pai(3) is heap.pai(2) is 6
-    assert heap.pai(1) is heap.pai(4) is 5
-    assert heap.pai(0) is 3
+
+def assegureQueEUmHeap(heap):
+    assegureQueAPropriedadeDeOrdemEstaSatisfeita(heap)
+    assegureQueEUmaArvoreBinariaCompleta(heap)
+
+
+def assegureQueAPropriedadeDeOrdemEstaSatisfeita(heap):
+    """Propriedade de ordem: para cada item i, os filhos de i terão um
+    prioridade menor igual a de i."""
+    for nodo in _IteradorPosFixado(heap._raiz):
+        for filho in nodo.filhos:
+            assert filho.prioridade <= nodo.prioridade
+
+
+def assegureQueEUmaArvoreBinariaCompleta(heap):
+    """Itera-se pelos nodos do penúltimo nível do heap até encontrar o
+    primeiro que possui 0 ou 1 filho, após encontra-lo assegura-se que
+    todos os nodos restantes a sua direita não possuem nenhum filho."""
+    penultimoNivel = heap.niveis -1
+    iterador = _IteradorPorNivel(heap._raiz, penultimoNivel)
+
+    for nodo in iterador:
+        if len(nodo.filhos) is not 2:
+            assert all(n.esquerdo is n.direito is None for n in iterador)
 
 
 def teste_IteradorPosFixado():
-    assert list(arvore) == [0, 3, 6, 2, 7, 1, 4, 5, 8]
+    assert list(heap) == [0, 3, 6, 2, 7, 1, 4, 5, 8]
 
 
 def teste_IteradorPosFixado_iterarSobreUmaArvoreVazia():
@@ -111,7 +93,7 @@ def teste_IteradorPosFixado_iterarSobreUmaArvoreVazia():
 
 
 def teste_IteradorPreFixado():
-    assert list(arvore.preFixado()) == [8, 7, 6, 0, 3, 2, 5, 1, 4]
+    assert list(heap.preFixado()) == [8, 7, 6, 0, 3, 2, 5, 1, 4]
 
 
 def teste_IteradorPreFixado_iterarSobreUmaArvoreVazia():
@@ -121,7 +103,7 @@ def teste_IteradorPreFixado_iterarSobreUmaArvoreVazia():
 
 
 def teste_IteradorInterFixado():
-    assert list(arvore.interFixado()) == [0, 6, 3, 7, 2, 8, 1, 5, 4]
+    assert list(heap.interFixado()) == [0, 6, 3, 7, 2, 8, 1, 5, 4]
 
 
 def teste_IteradorInterFixado_iterarSobreUmaArvoreVazia():
@@ -131,41 +113,46 @@ def teste_IteradorInterFixado_iterarSobreUmaArvoreVazia():
 
 
 def testes_doOperador_in():
-    assert 2 in arvore
-    assert 5 in arvore
-    assert arvore.topo in arvore
+    assert 2 in heap
+    assert 5 in heap
+    assert heap.topo in heap
 
 
 def testes_metodo_pai():
-    assert arvore.pai(0) is 6
-    assert arvore.pai(7) is 8
-    assert arvore.pai(arvore.topo) is INDEFINIDO
+    assert heap.pai(0) is 6
+    assert heap.pai(7) is 8
+    assert heap.pai(heap.topo) is INDEFINIDO
 
 
-def teste_oMetodo_pai_iraGerarUmErroSeOItemNaoForLocalizado():
+def teste_oMetodo_pai_geraUmErroSeOItemNaoForLocalizado():
     with raises(ItemNaoEncontrado):
-        arvore.pai(-10)
+        heap.pai(-10)
 
 
 def testes_metodo_filhos():
-    assert arvore.filhos(7) == (6, 2)
-    assert arvore.filhos(1) == tuple()
-    assert arvore.filhos(arvore.topo) == (7, 5)
+    assert heap.filhos(7) == (6, 2)
+    assert heap.filhos(1) == tuple()
+    assert heap.filhos(heap.topo) == (7, 5)
 
 
-def teste_oMetodo_filhos_iraGerarUmErroSeOItemNaoForLocalizado():
+def teste_oMetodo_filhos_geraUmErroSeOItemNaoForLocalizado():
     with raises(ItemNaoEncontrado):
-        arvore.filhos(-5)
+        heap.filhos(-5)
 
 
 def teste_propriedade_niveis():
-    assert arvore.niveis == 4
+    assert heap.niveis == 4
     assert Heap(None).niveis == 0 #vazia
 
 
 def teste_propriedade_ultimoNivel():
-    assert arvore.ultimoNivel is 3
-    assert arvoreVazia().ultimoNivel is INDEFINIDO
+    assert heap.ultimoNivel is 3
+    assert Heap(lambda x1, x2: x1).ultimoNivel is INDEFINIDO
+
+    h = Heap(lambda x1, x2: IGUAIS if x1 == x2 else max(x1, x2))
+    h.inserir(0)
+
+    assert h.ultimoNivel is 0
 
 
 def testes_propriedade_tamanho_aposInserirItens():
@@ -252,84 +239,42 @@ def testes_metodo_inserir_informandoOParametroPrioridade():
 
 
 def testes_metodo_ancestrais():
-    assert list(arvore.ancestrais(4)) == [5, 8]
-    assert list(arvore.ancestrais(6)) == [7, 8]
-    assert list(arvore.ancestrais(8)) == []
+    assert list(heap.ancestrais(4)) == [5, 8]
+    assert list(heap.ancestrais(6)) == [7, 8]
+    assert list(heap.ancestrais(8)) == []
 
 
-def teste_oMetodo_ancestrais_iraGerarUmErroSeOItemNaoForLocalizado():
+def teste_oMetodo_ancestrais_geraUmErroSeOItemNaoForLocalizado():
     with raises(ItemNaoEncontrado):
-        arvore.ancestrais(-5)
+        heap.ancestrais(-5)
 
 
 def testes_metodo_remover():
-    nums = arvorePronta()
+    nums = heapDeTestes()
 
     assert nums.remover() == 8
-    assert nums.topo is 7
-    assert nums.filhos(7) == (6, 5)
-    assert nums.filhos(6) == (3, 2)
-    assert nums.filhos(5) == (1, 4)
-    assert nums.filhos(3) == (0, )
-    assert nums.filhos(0) == nums.filhos(2) == nums.filhos(1) == \
-           nums.filhos(4) == tuple()
-    assert nums.pai(6) is nums.pai(5) is 7
-    assert nums.pai(3) is nums.pai(2) is 6
-    assert nums.pai(1) is nums.pai(4) is 5
-    assert nums.pai(0) is 3
+    assegureQueEUmHeap(nums)
 
     assert nums.remover() == 7
-    assert nums.topo is 6
-    assert nums.filhos(6) == (3, 5)
-    assert nums.filhos(3) == (0, 2)
-    assert nums.filhos(5) == (1, 4)
-    assert nums.filhos(0) == nums.filhos(2) == nums.filhos(1) == \
-           nums.filhos(4) == tuple()
-    assert nums.pai(3) == nums.pai(5) is 6
-    assert nums.pai(0) == nums.pai(2) is 3
-    assert nums.pai(1) == nums.pai(4) is 5
+    assegureQueEUmHeap(nums)
 
     assert nums.remover() == 6
-    assert nums.topo is 5
-    assert nums.filhos(5) == (3, 4)
-    assert nums.filhos(3) == (0, 2)
-    assert nums.filhos(4) == (1, )
-    assert nums.filhos(0) == nums.filhos(2) == nums.filhos(1) == tuple()
-    assert nums.pai(3) == nums.pai(4) is 5
-    assert nums.pai(0) == nums.pai(2) is 3
-    assert nums.pai(1) is 4
+    assegureQueEUmHeap(nums)
 
     assert nums.remover() == 5
-    assert nums.topo is 4
-    assert nums.filhos(4) == (3, 1)
-    assert nums.filhos(3) == (0, 2)
-    assert nums.filhos(0) == nums.filhos(2) == nums.filhos(1) == tuple()
-    assert nums.pai(3) == nums.pai(1) is 4
-    assert nums.pai(0) == nums.pai(2) is 3
+    assegureQueEUmHeap(nums)
 
     assert nums.remover() == 4
-    assert nums.topo is 3
-    assert nums.filhos(3) == (2, 1)
-    assert nums.filhos(2) == (0, )
-    assert nums.filhos(0) == nums.filhos(1) == tuple()
-    assert nums.pai(2) == nums.pai(1) is 3
-    assert nums.pai(0) is 2
+    assegureQueEUmHeap(nums)
 
     assert nums.remover() == 3
-    assert nums.topo is 2
-    assert nums.filhos(2) == (0, 1)
-    assert nums.filhos(0) == nums.filhos(1) == tuple()
-    assert nums.pai(0) == nums.pai(1) is 2
+    assegureQueEUmHeap(nums)
 
     assert nums.remover() == 2
-    assert nums.topo is 1
-    assert nums.filhos(1) == (0, )
-    assert nums.filhos(0) == tuple()
-    assert nums.pai(0) is 1
+    assegureQueEUmHeap(nums)
 
     assert nums.remover() == 1
-    assert nums.topo is 0
-    assert nums.filhos(0) == tuple()
+    assegureQueEUmHeap(nums)
 
     assert nums.remover() == 0
     assert nums.vazio
@@ -345,65 +290,39 @@ def testes_metodo_remover_comPrioridades():
     geo = 'geografia'
     prog = 'programação'
 
-    estudos = Heap(lambda x1, x2: IGUAIS if x1 == x2 else min(x1, x2))
-    estudos.inserir(mat, 1)
-    estudos.inserir(psico, 3)
+    estudos = Heap(lambda x1, x2: IGUAIS if x1 == x2 else max(x1, x2))
+    estudos.inserir(mat, 3)
+    estudos.inserir(psico, 1)
     estudos.inserir(neuro, 2)
     estudos.inserir(fis, 2)
-    estudos.inserir(comp, 0)
-    estudos.inserir(geo, 4)
-    estudos.inserir(prog, 1)
+    estudos.inserir(comp, 4)
+    estudos.inserir(geo, 0)
+    estudos.inserir(prog, 3)
 
     assert estudos.remover() == comp
-    assert estudos.topo is mat
-    assert estudos.filhos(mat) == (neuro, prog)
-    assert estudos.filhos(neuro) == (psico, fis)
-    assert estudos.filhos(prog) == (geo, )
-    assert estudos.filhos(psico) == estudos.filhos(fis) == \
-           estudos.filhos(geo) == tuple()
-    assert estudos.pai(neuro) == estudos.pai(prog) is mat
-    assert estudos.pai(psico) == estudos.pai(fis) is neuro
-    assert estudos.pai(geo) is prog
+    assegureQueEUmHeap(estudos)
 
     assert estudos.remover() == mat
-    assert estudos.topo is prog
-    assert estudos.filhos(prog) == (neuro, geo)
-    assert estudos.filhos(neuro) == (psico, fis)
-    assert estudos.filhos(psico) == estudos.filhos(fis) == \
-           estudos.filhos(geo) == tuple()
-    assert estudos.pai(neuro) == estudos.pai(geo) is prog
-    assert estudos.pai(psico) == estudos.pai(fis) is neuro
+    assegureQueEUmHeap(estudos)
 
     assert estudos.remover() == prog
-    assert estudos.topo is fis
-    assert estudos.filhos(fis) == (neuro, geo)
-    assert estudos.filhos(neuro) == (psico, )
-    assert estudos.filhos(psico) == estudos.filhos(geo) == tuple()
-    assert estudos.pai(neuro) == estudos.pai(geo) is fis
-    assert estudos.pai(psico) is neuro
+    assegureQueEUmHeap(estudos)
 
     assert estudos.remover() == fis
-    assert estudos.topo is neuro
-    assert estudos.filhos(neuro) == (psico, geo)
-    assert estudos.filhos(psico) == estudos.filhos(geo) == tuple()
-    assert estudos.pai(psico) == estudos.pai(geo) is neuro
+    assegureQueEUmHeap(estudos)
 
     assert estudos.remover() == neuro
-    assert estudos.topo is psico
-    assert estudos.filhos(psico) == (geo, )
-    assert estudos.filhos(geo) == tuple()
-    assert estudos.pai(geo) is psico
+    assegureQueEUmHeap(estudos)
 
     assert estudos.remover() == psico
-    assert estudos.topo is geo
-    assert estudos.filhos(geo) == tuple()
+    assegureQueEUmHeap(estudos)
 
     assert estudos.remover() == geo
     assert estudos.vazio
 
 
 def testes_propriedade_tamanho_aposRemoverItens():
-    nums = arvorePronta()
+    nums = heapDeTestes()
     nums.remover()
     nums.remover()
     nums.remover()
@@ -424,14 +343,14 @@ def testes_propriedade_tamanho_aposRemoverItens():
 
 
 def testes_metodo_quantidadeDeFilhos():
-    assert arvore.quantidadeDeFilhos(7) is 2
-    assert arvore.quantidadeDeFilhos(1) is 0
-    assert arvore.quantidadeDeFilhos(arvore.topo) is 2
+    assert heap.quantidadeDeFilhos(7) is 2
+    assert heap.quantidadeDeFilhos(1) is 0
+    assert heap.quantidadeDeFilhos(heap.topo) is 2
 
 
-def teste_oMetodo_quantidadeDeFilhos_iraGerarUmErroSeOItemNaoForLocalizado():
+def teste_oMetodo_quantidadeDeFilhos_geraUmErroSeOItemNaoForLocalizado():
     with raises(ItemNaoEncontrado):
-        arvore.quantidadeDeFilhos(-5)
+        heap.quantidadeDeFilhos(-5)
 
 
 def teste_oMetodo_quantidadeDeFilhos_iraGerarUmErroSeOHeapEstiverVazio():
@@ -442,5 +361,119 @@ def teste_oMetodo_quantidadeDeFilhos_iraGerarUmErroSeOHeapEstiverVazio():
 def teste_oPropriedade_topt_iraGerarUmErroSeOHeapEstiverVazio():
     with raises(FalhaNaOperacao):
         Heap(None).topo
+
+
+def testes_metodo_nivel():
+    assert tuple(heap.nivel(2)) == (6, 2, 1, 4)
+    assert tuple(heap.nivel(heap.ultimoNivel)) == (0, 3)
+
+
+def testes_oMetodo_nivel_retornaUmIteradorVazioSeOHeapNaoPossuirONivelInformado():
+    assert vazio(heap.nivel(10))
+    assert vazio(heap.nivel(-10))
+
+
+def testes_metodo_inserir_inserirItensComPrioridadesIguais():
+    """Verificar se o heap funciona corretamente ao inserir itens com
+    prioridades iguais"""
+    heap = Heap(lambda x1, x2: IGUAIS if x1 == x2 else max(x1, x2))
+    heap.inserir('tarefa1', 3)
+    heap.inserir('tarefa2', 5)
+    assegureQueEUmHeap(heap)
+
+    heap.inserir('tarefa3', 1)
+    heap.inserir('tarefa4', 2)
+    assegureQueEUmHeap(heap)
+
+    heap.inserir('tarefa5', 1)
+    heap.inserir('tarefa6', 3)
+    assegureQueEUmHeap(heap)
+
+    heap.inserir('tarefa7', 1)
+    heap.inserir('tarefa8', 5)
+    assegureQueEUmHeap(heap)
+
+
+def testes_metodo_inserir_inserirItensDuplicados():
+    """Verificar se o heap funciona corretamente ao inserir itens duplicados,
+    este teste é ligeiramente diferente do teste acima pois este não informa o
+    segundo parâmetro para o método inserir."""
+    heap = Heap(lambda x1, x2: IGUAIS if x1 == x2 else max(x1, x2))
+    heap.inserir(3)
+    heap.inserir(5)
+    assegureQueEUmHeap(heap)
+
+    heap.inserir(1)
+    heap.inserir(2)
+    assegureQueEUmHeap(heap)
+
+    heap.inserir(1)
+    heap.inserir(3)
+    assegureQueEUmHeap(heap)
+
+    heap.inserir(1)
+    heap.inserir(5)
+    assegureQueEUmHeap(heap)
+
+
+def testes_metodo_remover_deUmHeapComItensDePrioridadesIguais():
+    """Verifica se o heap funciona corretamente ao remover seus itens que
+    possuem prioridades iguais"""
+    heap = Heap(lambda x1, x2: IGUAIS if x1 == x2 else max(x1, x2))
+    heap.inserir('tarefa1', 3)
+    heap.inserir('tarefa2', 5)
+    heap.inserir('tarefa3', 1)
+    heap.inserir('tarefa4', 2)
+    heap.inserir('tarefa5', 1)
+    heap.inserir('tarefa6', 3)
+    heap.inserir('tarefa7', 1)
+    heap.inserir('tarefa8', 5)
+
+    assert heap.remover() is 'tarefa2'
+    assert heap.remover() is 'tarefa8'
+    assegureQueEUmHeap(heap)
+
+    assert heap.remover() is 'tarefa1'
+    assert heap.remover() is 'tarefa6'
+    assegureQueEUmHeap(heap)
+
+    assert heap.remover() is 'tarefa4'
+    assert heap.remover() is 'tarefa7'
+    assegureQueEUmHeap(heap)
+
+    assert heap.remover() is 'tarefa3'
+    assert heap.remover() is 'tarefa5'
+    assert heap.vazio
+
+
+def testes_metodo_remover_deUmHeapComItensDuplicados():
+    """remover itens de um heap que possui itens duplicados, este teste é
+    ligeiramente diferente do teste acima pois os itens foram inseridos sem
+    informar o segundo parâmetro, a prioridade do item"""
+    heap = Heap(lambda x1, x2: IGUAIS if x1 == x2 else max(x1, x2))
+    heap.inserir(5)
+    heap.inserir(3)
+    heap.inserir(5)
+    heap.inserir(3)
+    heap.inserir(4)
+    heap.inserir(5)
+    heap.inserir(5)
+    heap.inserir(3)
+
+    assert heap.remover() is 5
+    assert heap.remover() is 5
+    assegureQueEUmHeap(heap)
+
+    assert heap.remover() is 5
+    assert heap.remover() is 5
+    assegureQueEUmHeap(heap)
+
+    assert heap.remover() is 4
+    assert heap.remover() is 3
+    assegureQueEUmHeap(heap)
+
+    assert heap.remover() is 3
+    assert heap.remover() is 3
+    assert heap.vazio
 
 

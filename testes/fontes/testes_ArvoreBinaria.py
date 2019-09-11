@@ -4,7 +4,7 @@ from erros import ItemNaoEncontrado, ParametroNaoInformado, FalhaNaOperacao
 from pyext import naoGeraErro
 
 
-def arvorePronta():
+def arvoreDeTestes():
     arv = ArvoreBinaria()
     arv.inserir(0)
     arv.inserir(1, 0)
@@ -19,7 +19,7 @@ def arvorePronta():
     return arv
 
 
-arvore = arvorePronta()
+arvore = arvoreDeTestes()
 
 
 def testes_metodo_inserir():
@@ -127,7 +127,7 @@ def testes_metodo_altura():
     assert arvore.altura(arvore.raiz) == 3
 
 
-def testes_oMetodo_altura_iraGerarUmErroSeOItemNaoForLocalizado():
+def testes_oMetodo_altura_geraUmErroSeOItemNaoForLocalizado():
     with raises(ItemNaoEncontrado):
         arvore.altura(-4)
 
@@ -138,7 +138,7 @@ def testes_metodo_profundidade():
     assert arvore.profundidade(arvore.raiz) == 0
 
 
-def testes_oMetodo_profundidade_iraGerarUmErroSeOItemNaoForLocalizado():
+def testes_oMetodo_profundidade_geraUmErroSeOItemNaoForLocalizado():
     with raises(ItemNaoEncontrado):
         arvore.profundidade(-9)
 
@@ -189,9 +189,9 @@ def testes_daPropiedade_tamanho_aposInserirAlgunsItens():
 def testes_iteradorInterFixadoNodos():
     from arvore import _IteradorInterFixado as Iterador
 
-    assert [nodo.item for nodo in Iterador(arvore._nodo(1))] == [3, 1, None, 4]
+    assert [nodo.item for nodo in Iterador(arvore._nodo([1]))] == [3, 1, None, 4]
 
-    assert [nodo.item for nodo in Iterador(arvore._nodo(2))] == [7, 5, 2, 6]
+    assert [nodo.item for nodo in Iterador(arvore._nodo([2]))] == [7, 5, 2, 6]
 
 
 def testes_metodo_tamanhoSubArvore():
@@ -200,13 +200,13 @@ def testes_metodo_tamanhoSubArvore():
     assert arvore.tamanhoDaSubarvore(arvore.raiz) == 9
 
 
-def testes_oMetodo_tamanhoSubArvore_iraGerarUmErroSeOItemNaoForLocalizado():
+def testes_oMetodo_tamanhoSubArvore_geraUmErroSeOItemNaoForLocalizado():
     with raises(ItemNaoEncontrado):
         arvore.tamanhoDaSubarvore(-7)
 
 
 def testes_metodo_remover():
-    numeros = arvorePronta()
+    numeros = arvoreDeTestes()
     numeros.remover(4)
 
     assert numeros.filhos(1) == (3, )
@@ -222,20 +222,20 @@ def testes_metodo_remover():
 
 
 def testes_metodo_remover_removerARaizDarvore():
-    nums = arvorePronta()
+    nums = arvoreDeTestes()
     nums.remover(nums.raiz)
 
     assert nums.raiz is None
     assert nums.vazia
 
 
-def testes_oMetodo_remover_iraGerarUmErroSeOItemNaoForLocalizado():
+def testes_oMetodo_remover_geraUmErroSeOItemNaoForLocalizado():
     with naoGeraErro():
         arvore.remover(-5)
 
 
 def testes_daPropiedade_tamanho_aposRemoverAlgunsItens():
-    nums = arvorePronta()
+    nums = arvoreDeTestes()
     nums.remover(5)
 
     assert nums.tamanho == 7
@@ -246,7 +246,7 @@ def testes_daPropiedade_tamanho_aposRemoverAlgunsItens():
 
 
 def testes_daPropiedade_tamanho_aposRemoverARaiz():
-    nums = arvorePronta()
+    nums = arvoreDeTestes()
     nums.remover(nums.raiz)
 
     assert nums.tamanho == 0
