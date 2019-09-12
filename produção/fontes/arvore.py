@@ -24,8 +24,10 @@ from iteruteis import vazio
 from itertools import zip_longest
 
 
-def _itemNaoEncontrado():
-    raise ItemNaoEncontrado
+def _itemNaoEncontrado(mensagem=NAO_INFORMADO):
+    if mensagem is NAO_INFORMADO:
+        raise ItemNaoEncontrado
+    raise ItemNaoEncontrado(mensagem)
 
 
 def _ancestrais(nodo):
@@ -830,6 +832,7 @@ class ArvoreAVL:
         """
         return self._tamanho
 
+
     @property
     def vazia(self):
         """True se a árvore estiver vazia, false caso contrário.
@@ -904,7 +907,7 @@ class ArvoreAVL:
             self._raiz = b
             b.pai = None
         else:
-            self._registrarFilho(b, z.pai)
+            self._substituir(z, b)
 
         a.pai = c.pai = b
         if t1 is not None:
@@ -969,7 +972,8 @@ class ArvoreAVL:
             else:
                 nodo = nodo.esquerdo
 
-        return funcao()
+        # TODO informar apenas o item
+        return funcao(f'{item} não encontrado.')
 
 
     def pai(self, item):
@@ -1050,7 +1054,7 @@ class ArvoreAVL:
 
         :return true se o item for localizado, false caso contrário.
         """
-        return self._nodo(item, lambda : None) is not None
+        return self._nodo(item, lambda ig: None) is not None
 
 
     def ancestrais(self, item):
@@ -1114,7 +1118,7 @@ class ArvoreAVL:
         if not _possuiFilhos(nodo):
             self._desligarDaArvore(nodo)
         elif _possui1Filho(nodo):
-            self._registrarFilho(self._filho(nodo), nodo.pai)
+            self._substituir(nodo, self._filho(nodo))
         else:
             y = self._extremaEsquerda(nodo.direito)
             nodo.item = y.item
@@ -1124,6 +1128,13 @@ class ArvoreAVL:
 
     def _filho(self, nodo):
         return nodo.esquerdo if nodo.esquerdo is not None else nodo.direito
+
+
+    def _substituir(self, nodo1, nodo2):
+        """substitui o nodo1 pelo nodo2"""
+        pai = nodo1.pai
+        setattr(pai, 'esquerdo' if pai.esquerdo is nodo1 else 'direito', nodo2)
+        nodo2.pai = pai
 
 
     def _extremaEsquerda(self, nodo):

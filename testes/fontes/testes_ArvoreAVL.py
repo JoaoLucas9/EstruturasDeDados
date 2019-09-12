@@ -1,7 +1,7 @@
-from arvore import ArvoreAVL, INDEFINIDO, IGUAIS
+from arvore import ArvoreAVL, INDEFINIDO, IGUAIS, _IteradorPosFixado
 from erros import ItemNaoEncontrado, ColecaoVazia, FalhaNaOperacao
 from pytest import raises
-from random import sample
+from random import sample, randint
 from uteis import executar
 from pyext import naoGeraErro
 
@@ -10,7 +10,7 @@ def arvoreVazia():
     return ArvoreAVL(lambda x1, x2: IGUAIS if x1 == x2 else max(x1, x2))
 
 
-def arvorePronta():
+def arvoreDeTestes():
     nums = arvoreVazia()
     nums.inserir(40)
     nums.inserir(60)
@@ -34,7 +34,7 @@ def novaArvore(*numeros):
     return nums
 
 
-arvore = arvorePronta()
+arvore = arvoreDeTestes()
 
 
 def teste_metodo_inserir():
@@ -216,7 +216,7 @@ def teste_metodo_remover():
     Inserir 80
     90 (raiz) - nodo interno 2 filhos, rebalanceamento ✓
     """
-    nums = arvorePronta()
+    nums = arvoreDeTestes()
     nums.remover(30)
 
     assert nums.raiz is 60
@@ -339,7 +339,7 @@ def teste_metodo_remover3():
 
 
 def teste_metodo_remover4():
-    nums = arvorePronta()
+    nums = arvoreDeTestes()
     nums.inserir(50)
     nums.remover(30)
 
@@ -358,7 +358,7 @@ def teste_metodo_remover4():
 
 
 def teste_metodo_remover5():
-    nums = arvorePronta()
+    nums = arvoreDeTestes()
     nums.inserir(35)
     nums.inserir(50)
     nums.remover(30)
@@ -587,7 +587,7 @@ def teste_metodo_remover_multiplosRebalanceamentos4():
 
 
 def teste_propiedade_tamanho_aposRemoverAlgunsItens():
-    nums = arvorePronta()
+    nums = arvoreDeTestes()
 
     nums.remover(40)
     assert nums.tamanho == 8
@@ -685,3 +685,93 @@ def eUmaArvoreAVL(arvore):
 
     return True
 
+
+def assegurarQueEUmaArvoreAVL(arvore):
+    for nodo in _IteradorPosFixado(arvore._raiz):
+        esquerdo = nodo.esquerdo
+        alturaEsquerdo = -1 if esquerdo is None else arvore._altura(esquerdo)
+
+        direito = nodo.direito
+        alturaDireito = -1 if direito is None else arvore._altura(direito)
+
+        if esquerdo is not None:
+            assert esquerdo.item <= nodo.item
+
+        if direito is not None:
+            assert direito.item >= nodo.item
+        assert abs(alturaEsquerdo - alturaDireito) <= 1
+
+
+def desativar_testeSuperArvoreAVLComDuplicados():
+    numeros = []
+    arvore = arvoreVazia()
+
+    for x in range(3000):
+        x = randint(0, 2000)
+        numeros.append(x)
+        arvore.inserir(x)
+
+        if arvore.tamanho % 5 == 0:
+            assegurarQueEUmaArvoreAVL(arvore)
+
+    for x in numeros:
+        arvore.remover(x)
+
+        if arvore.tamanho % 5 == 0 and arvore.tamanho > 0:
+            assegurarQueEUmaArvoreAVL(arvore)
+
+
+def teste_metodo_inserir_duplicados1():
+    arvore = ArvoreAVL(lambda x1, x2: IGUAIS if x1 == x2 else max(x1, x2))
+    arvore.inserir(4)
+    arvore.inserir(5)
+    arvore.inserir(4)
+    arvore.inserir(4)
+
+    assegurarQueEUmaArvoreAVL(arvore)
+
+
+def teste_metodo_inserir_duplicados2():
+    arvore = ArvoreAVL(lambda x1, x2: IGUAIS if x1 == x2 else max(x1, x2))
+    arvore.inserir(4)
+    arvore.inserir(4)
+    arvore.inserir(4)
+    arvore.inserir(4)
+    arvore.inserir(4)
+    arvore.inserir(4)
+    arvore.inserir(4)
+    arvore.inserir(4)
+    arvore.inserir(4)
+    assegurarQueEUmaArvoreAVL(arvore)
+
+
+def teste_metodo_remover_duplicados1():
+    arvore = novaArvore(2, 3, 1, 2, 2)
+    arvore.remover(2)
+    raiz = arvore._raiz
+
+    assert raiz.item is 2
+    assert raiz.esquerdo.item is 1
+
+    arvore.remover(3)
+
+    assert arvore._raiz is raiz
+    assert raiz.item is 2
+    assert raiz.esquerdo.item is 1
+    assert raiz.direito.item is 2
+
+    arvore.remover(1)
+
+    assert arvore._raiz is raiz
+    assert raiz.item is 2
+    assert raiz.esquerdo is None
+    assert raiz.direito.item is 2
+
+
+def teste_metodo_remover_duplicados2():
+    arvore = novaArvore(4, 2, 3, 3, 2, 0, 1, 3, 3)
+    arvore.remover(4)
+    arvore.remover(2)
+    arvore.remover(2)
+    
+    assegurarQueEUmaArvoreAVL(arvore)
