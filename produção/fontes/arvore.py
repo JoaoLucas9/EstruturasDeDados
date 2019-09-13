@@ -1296,7 +1296,7 @@ class ArvoreVP:
             self._raiz = b
             b.pai = None
         else:
-            self._registrarFilho(b, u.pai)
+            self._substituir(u, b)
 
         a.pai = c.pai = b
         if t1 is not None:
@@ -1489,7 +1489,7 @@ class ArvoreVP:
                 self._resolverDuploPreto(nodo.pai, None)
         elif _possui1Filho(nodo):
             t = nodo.esquerdo if nodo.direito is None else nodo.direito
-            self._registrarFilho(t, nodo.pai)
+            self._substituir(nodo, t)
 
             #considera-se que se o nodo possui um único filho, então um dos
             # dois será vermelho
@@ -1498,11 +1498,12 @@ class ArvoreVP:
             v = self._extremaEsquerda(nodo.direito)
             x = v.pai
             r = v.direito
-            self._desligarDaArvore(v)
             nodo.item = v.item
 
             if r is not None:
-                self._registrarFilho(r, x)
+                self._substituir(v, r)
+            else:
+                self._desligarDaArvore(v)
 
             if v.cor == self._cor(r) == PRETO:
                 # y irmão de r
@@ -1519,6 +1520,13 @@ class ArvoreVP:
             else:
                 if r is not None:
                     r.cor = PRETO
+
+
+    def _substituir(self, nodo1, nodo2):
+        """substitui o nodo1 pelo nodo2"""
+        pai = nodo1.pai
+        setattr(pai, 'esquerdo' if pai.esquerdo is nodo1 else 'direito', nodo2)
+        nodo2.pai = pai
 
 
     def _cor(self, nodo):

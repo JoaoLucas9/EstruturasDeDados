@@ -1,18 +1,14 @@
-from arvore import ArvoreVP
+from arvore import ArvoreVP, _IteradorPosFixado
 from pyext import naoGeraErro
 from arvore import IGUAIS, INDEFINIDO, PRETO, VERMELHO
 from pytest import raises
 from erros import ItemNaoEncontrado, FalhaNaOperacao
-from random import sample
-from uteis import executar
-
-
-def arvoreVazia():
-    return ArvoreVP(lambda x1, x2: IGUAIS if x1 == x2 else max(x1, x2))
+from random import sample, randint
+from iteruteis import tamanho
 
 
 def arvorePronta(*numeros):
-    nums = arvoreVazia()
+    nums = ArvoreVP(lambda x1, x2: IGUAIS if x1 == x2 else max(x1, x2))
 
     for numero in numeros:
         nums.inserir(numero)
@@ -24,7 +20,7 @@ arvore = arvorePronta(4, 6, 8, 3, 2, 10, 9, 0, 1)
 
 
 def testes_metodo_inserir():
-    nums = arvoreVazia()
+    nums = arvorePronta()
     nums.inserir(4)
     nums.inserir(6)
     nums.inserir(8)
@@ -108,7 +104,7 @@ def testes_metodo_inserir():
 
 
 def testes_metodo_inserir2():
-    nums = arvoreVazia()
+    nums = arvorePronta()
     nums.inserir(10)
     nums.inserir(9)
     nums.inserir(8)
@@ -138,7 +134,7 @@ def testes_metodo_inserir2():
 
 
 def testes_propiedade_tamanho_aposInserirAlgunsItens():
-    nums = arvoreVazia()
+    nums = arvorePronta()
     nums.inserir(0)
 
     assert nums.tamanho is 1
@@ -161,7 +157,7 @@ def teste_iterador():
 
 def teste_IteradorPosFixado_iterarSobreUmaArvoreVazia():
     with naoGeraErro():
-        for n in arvoreVazia():
+        for n in arvorePronta():
             pass
 
 
@@ -171,7 +167,7 @@ def teste_iterador_preFixado():
 
 def teste_IteradorPreFixado_iterarSobreUmaArvoreVazia():
     with naoGeraErro():
-        for n in arvoreVazia().preFixado():
+        for n in arvorePronta().preFixado():
             pass
 
 
@@ -181,7 +177,7 @@ def teste_iterador_interFixado():
 
 def teste_IteradorInterFixado_iterarSobreUmaArvoreVazia():
     with naoGeraErro():
-        for n in arvoreVazia().interFixado():
+        for n in arvorePronta().interFixado():
             pass
 
 
@@ -249,7 +245,7 @@ def testes_propiedade_itensSemFilhos():
     assert list(arvore.itensSemFilhos) == [0, 2, 4, 8, 10]
     assert list(arvorePronta(*range(10, 2, -1)).itensSemFilhos) == [3, 6, 8, 10]
     assert list(arvorePronta(1).itensSemFilhos) == [1]
-    assert list(arvoreVazia().itensSemFilhos) == []
+    assert list(arvorePronta().itensSemFilhos) == []
 
 
 def testes_metodo_profundidadePreta():
@@ -265,17 +261,15 @@ def testes_metodo_profundidadePreta_iraGerarUmErroSeOItemNaoForLocalizado():
 
 def desativar_testeSuperArvoreVP():
     numeros = sample(range(3000), 3000)
-    # print(numeros)
-    arvore = arvoreVazia()
+    arvore = arvorePronta()
 
     for numero in numeros:
         arvore.inserir(numero)
 
-        if arvore.tamanho % 10 is 0:
+        if arvore.tamanho % 5 is 0:
             assegureEUmaArvoreVP(arvore)
 
     for numero in numeros:
-        # print(numero)
         arvore.remover(numero)
         if arvore.tamanho % 5 is 0 and not arvore.vazia:
             assegureEUmaArvoreVP(arvore)
@@ -287,27 +281,37 @@ def assegureEUmaArvoreVP(arvore):
 
 
 def assegurarQueTodosOsItensVermelhosPossuemFilhosPretosApenas(arvore):
-    for item in itensVermelhos(arvore):
-        assert not possuiFilhosVermelhos(item, arvore)
+    for nodo in nodosVermelhos(arvore):
+        assert nodo.esquerdo is None or nodo.esquerdo.cor is PRETO
+        assert nodo.direito is None or nodo.direito.cor is PRETO
 
 
-def itensVermelhos(arvore):
-    return (item for item in arvore if arvore.cor(item) is VERMELHO)
-
-
-def possuiFilhosVermelhos(item, arvore):
-    for filho in arvore.filhos(item):
-        if arvore.cor(filho) is VERMELHO:
-            return True
-    return False
+def nodosVermelhos(arvore):
+    return (nodo for nodo in _IteradorPosFixado(arvore._raiz) if
+            nodo.cor is VERMELHO)
 
 
 def assegurarQueTodosOsNodosExternosPossuemAMesmaProfundidadePreta(arvore: ArvoreVP):
-    iter = arvore.itensSemFilhos
-    p = arvore.profundidadePreta(next(iter))
+    iter = nodosExternos(arvore)
+    p = profundidadePreta(next(iter))
     
-    for item in iter:
-        assert arvore.profundidadePreta(item) == p
+    for nodo in iter:
+        assert profundidadePreta(nodo) == p
+
+
+def nodosExternos(arvore):
+    return (nodo for nodo in _IteradorPosFixado(arvore._raiz) if 
+            nodo.esquerdo is nodo.direito is None)
+
+
+def profundidadePreta(nodo):
+    return tamanho(n for n in ancestrais(nodo) if n.cor is PRETO) -1
+
+
+def ancestrais(nodo):
+    while nodo is not None:
+        yield nodo
+        nodo = nodo.pai
 
 
 def testes_metodo_remover():
@@ -408,7 +412,6 @@ def testes_metodo_remover4():
     assert nums.filhos(2) == (0, )
     assert nums.cor(0) is VERMELHO
     assert nums.cor(2) is PRETO
-
 
 
 def testes_metodo_remover5():
@@ -894,4 +897,37 @@ def testes_oMetodo_remover_iraGerarUmErroSeOItemNaoForLocalizado():
 # julgo que já seja hora para prossegir para uma nova estrutura de dados.
 # Mas certamente eu ainda voltarei para aprimorar o código, o trabalho não
 # foi finalizado.
+
+
+def desativar_testeSuperArvoreVPComDuplicados():
+    numeros = []
+    arvore = arvorePronta()
+    l = 6000
+
+    for x in range(l):
+        x = randint(0, l)
+        arvore.inserir(x)
+        numeros.append(x)
+
+        if arvore.tamanho % 5 is 0:
+            assegureEUmaArvoreVP(arvore)
+
+    for x in numeros:
+        arvore.remover(x)
+
+        if arvore.tamanho % 5 is 0 and not arvore.vazia:
+            assegureEUmaArvoreVP(arvore)
+
+
+def testes_metodo_remover_itensDuplicados():
+    arvore = arvorePronta(1, 1, 1, 2, 0, 2)
+    arvore.remover(1)
+    arvore.remover(1)
+    arvore.remover(1)
+
+    raiz = arvore._raiz
+    assert raiz.item is 2
+    assert raiz.esquerdo.item is 0
+    assert raiz.direito.item is 2
+    assegureEUmaArvoreVP(arvore)
 
