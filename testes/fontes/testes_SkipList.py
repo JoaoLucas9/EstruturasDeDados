@@ -8,7 +8,7 @@ def listaVazia():
     return SkipList(lambda c1, c2: IGUAIS if c1 == c2 else max(c1, c2))
 
 
-def listaPronta():
+def listaDeTestes():
     precos = SkipList(lambda c1, c2: IGUAIS if c1 == c2 else max(c1, c2))
     precos[2] = 'caneta'
     precos[100] = 'uniforme'
@@ -22,7 +22,7 @@ def listaPronta():
     return precos
 
 
-lista = listaPronta()
+lista = listaDeTestes()
 
 
 
@@ -157,7 +157,7 @@ def testes_operador_in():
 
 
 def testes_operador_del():
-    precos = listaPronta()
+    precos = listaDeTestes()
 
     del precos[50]
     del precos[2]
@@ -191,7 +191,7 @@ def testes_operador_del():
 
 
 def testes_propiedade_tamanho_aposRemoverAlgunsPares():
-    precos = listaPronta()
+    precos = listaDeTestes()
     del precos[30]
 
     assert precos.tamanho == 7

@@ -87,7 +87,7 @@ _TRUE_OR_FALSE = (True, False)
 
 
 class SkipList:
-    """Uma das implementações de um mapa que mantém as chaves ordenadas."""
+    """Implementação de um mapa que mantém as chaves ordenadas."""
 
     def __init__(self, comparador):
         """

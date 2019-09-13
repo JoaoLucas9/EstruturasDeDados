@@ -48,7 +48,7 @@ pe_rn = {'distancia':253, 'id':'050'}
 pb_pe = {'distancia':104, 'id':'055'}
 
 
-def grafoPronto():
+def grafoDeTestes():
     estados = Grafo()
     estados.inserir('AM')
     estados.inserir('PE', 'AM', **pe_am)
@@ -84,7 +84,7 @@ def novoGrafo(*itens):
     return g
 
 
-grafo = grafoPronto()
+grafo = grafoDeTestes()
 
 
 def testes_inserir():
@@ -680,7 +680,7 @@ def testes_desligar_naoRemoveraALigacaoDeBParaAMesmoQueElaPasassePeloFiltro():
 
 
 def testes_remover():
-    grafo = grafoPronto()
+    grafo = grafoDeTestes()
     grafo.remover('AM')
 
     assert contemApenas((pe_mt_pe, pe_rn, pe_rj), grafo.incidentesDe('PE'))
@@ -711,7 +711,7 @@ def testes_remover():
 
 
 def testes_totalDeLigacoesOrientadas_e_NaoOrientadas_aposRemoverVertices():
-    grafo = grafoPronto()
+    grafo = grafoDeTestes()
     grafo.remover('AM')
 
     assert grafo.totalDeLigacoesNaoOrientadas is 3
@@ -734,7 +734,7 @@ def testes_totalDeLigacoesOrientadas_e_NaoOrientadas_aposRemoverVertices():
 
 
 def testes_totalDeItens_aposRemoverItens():
-    grafo = grafoPronto()
+    grafo = grafoDeTestes()
     grafo.remover('PE')
 
     assert grafo.totalDeItens is 7

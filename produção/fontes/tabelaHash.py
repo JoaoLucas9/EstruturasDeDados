@@ -15,7 +15,9 @@ def _chaveNaoEncontrada(chave):
 
 
 class TabelaHash:
-    """Utiliza encadeamento separado para tratar colisões."""
+    """Implementação de um mapa.
+
+    Utiliza encadeamento separado para tratar colisões."""
 
 
     def __init__(self, funcaoHash, capacidade=11, fatorDeCargaMaximo=0.75):

@@ -9,7 +9,7 @@ def codigoHash(chave: str):
     return sum(ord(chave[i]) * (33 ** i) for i in range(min(len(chave), 10)))
 
 
-def dataDaFundacaoDeGrandesEmpresas():
+def dataDeFundacao():
     t = TabelaHash(codigoHash)
     t['microsoft'] = 1975
     t['google'] = 1998
@@ -20,7 +20,7 @@ def dataDaFundacaoDeGrandesEmpresas():
     return t
 
 
-fundacao = dataDaFundacaoDeGrandesEmpresas()
+fundacao = dataDeFundacao()
 
 def testes_oMetodo_setitem_informarUma():
     chaveQueNaoEstaNaTabelaEUmValor()
@@ -51,7 +51,7 @@ def chaveQueNaoEstaNaTabelaEUmValor():
 
 def chaveQueEstaNaTabelaEUmValor():
     """O atual valor da chave deverá ser substituido."""
-    fund = dataDaFundacaoDeGrandesEmpresas()
+    fund = dataDeFundacao()
     fund['microsoft'] = 1990
     fund['google'] = 2000
     fund['ibm'] = 2010
@@ -77,7 +77,7 @@ def chaveQueNaoEstaNaTabelaEUmaFuncao():
 def chaveQueEstaNaTabelaEUmaFuncao():
     """Serão informados a função a chave e o valor atual da mesma, o qual
     será substituido pelo valor retornado pela função."""
-    fund = dataDaFundacaoDeGrandesEmpresas()
+    fund = dataDeFundacao()
     fund['apple'] = lambda c, v: v + 5
     fund['facebook'] = lambda c, v: v + 5
     fund['ibm'] = lambda c, v: v + 5
@@ -256,7 +256,7 @@ def testes_aPropiedade_totalDeColisoes_naoSeraInfluenciadaPelasSubstituicoesDosV
 
 
 def testes_operador_del():
-    fund = dataDaFundacaoDeGrandesEmpresas()
+    fund = dataDeFundacao()
 
     del fund['microsoft']
     assert 'microsoft' not in fund
@@ -285,7 +285,7 @@ def testes_operador_del():
 
 
 def testes_propiedade_tamanho_aposRemoverAlgunsItens():
-    fund = dataDaFundacaoDeGrandesEmpresas()
+    fund = dataDeFundacao()
 
     del fund['microsoft']
     del fund['google']
