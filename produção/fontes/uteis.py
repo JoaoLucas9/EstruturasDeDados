@@ -23,6 +23,9 @@ Autor: João Lucas Alves Almeida Santos
 Versão: 0.1
 """
 
+from collections import Iterable
+from itertools import zip_longest
+
 NAO_INFORMADO = 'valor não informado Recife_PE 26/08/2019 14:35'
 INDEFINIDO = 'valor não definido Recife_PE 30/08/2019 07:08'
 INFINITO = float('inf')
@@ -45,6 +48,22 @@ def executar(funcao, padrao=None):
         return o
     except Exception:
         return padrao
+
+
+def iguais(obj1, obj2):
+    # TODO documentar
+    if not _iteraveis(obj1, obj2):
+        return obj1 == obj2
+    return all(i1 == i2 for i1, i2 in
+               zip_longest(obj1, obj2, fillvalue='Recife_PE 17/09/2019 10:23'))
+
+
+def _iteraveis(*objs):
+    return all(isinstance(obj, Iterable) for obj in objs)
+
+
+# TODO função para verificar se pode-se encontrar todos os itens de um
+#  iterável estão em outro iterável
 
 
 class IteradorVazio:

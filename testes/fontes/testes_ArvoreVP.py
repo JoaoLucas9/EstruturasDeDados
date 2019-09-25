@@ -1,16 +1,19 @@
 from arvore import ArvoreVP, _IteradorPosFixado
 from pyext import naoGeraErro
-from arvore import IGUAIS, INDEFINIDO, PRETO, VERMELHO
+from arvore import PRETO, VERMELHO
+from uteis import INDEFINIDO
 from pytest import raises
 from erros import ItemNaoEncontrado, FalhaNaOperacao
 from random import sample, randint
 from iteruteis import tamanho
+from uteistestes import maior, pickle, load, deletar
+from random import sample
 
 
-def arvorePronta(*numeros):
-    nums = ArvoreVP(lambda x1, x2: IGUAIS if x1 == x2 else max(x1, x2))
+def arvorePronta(*itens):
+    nums = ArvoreVP(maior)
 
-    for numero in numeros:
+    for numero in itens:
         nums.inserir(numero)
 
     return nums
@@ -930,4 +933,112 @@ def testes_metodo_remover_itensDuplicados():
     assert raiz.esquerdo.item is 0
     assert raiz.direito.item is 2
     assegureEUmaArvoreVP(arvore)
+
+
+def testes_operadorDe_igualdade_retornaTrueSe():
+    asArvoresPossuiremOsMesmosItensNasMesmasQuantidades()
+    asArvoresEstiveremVazias()
+    aArvoreGenericaPossuirOsMesmosItensQueAArvoreVP()
+    aArvoreAVLPossuirOsMesmosItensQueAArvoreVP()
+
+
+def asArvoresPossuiremOsMesmosItensNasMesmasQuantidades():
+    a1 = arvorePronta(4, 6, 8, 3, 2, 10, 9, 0, 1)
+    a2 = arvorePronta(1, 8, 10, 4, 9, 0, 6, 3, 2)
+
+    assert a1 == a2
+
+
+def asArvoresEstiveremVazias():
+    assert ArvoreVP(None) == ArvoreVP(None)
+
+
+def aArvoreGenericaPossuirOsMesmosItensQueAArvoreVP():
+    from testes_arvore import arvore as arvoreG
+
+    assert arvorePronta(0, 1, 2, 3, 4, 5, 6, 7, None, 8) == arvoreG
+
+
+def aArvoreAVLPossuirOsMesmosItensQueAArvoreVP():
+    from testes_ArvoreAVL import arvore as arvoreAVL
+
+    assert arvorePronta(4, 6, 8, 3, 2, 10, 9, 0, 1) == arvoreAVL
+
+
+def teste_operadorDe_igualdade_comArvoresAleatoriasIguais():
+    numeros = sample(range(1000), 1000)
+    arvore1 = inserir(numeros, ArvoreVP(maior))
+    arvore2 = inserir(sample(numeros, 1000), ArvoreVP(maior))
+
+    assert arvore1 == arvore2
+
+
+def inserir(itens, arvore):
+    for item in itens:
+        arvore.inserir(item)
+    return arvore
+
+
+def testes_operadorDe_igualdade_retornaFalseSe():
+    asArvoresNaoPossuiremOsMesmosItens()
+    asArvoresPossuiremOsMesmosItensEmQuantidadesDiferentes()
+    apenasUmaDasArvoresEstiverVazia()
+    oObjetoInformadoNaoForUmaArvoreValida()
+    asRaizesForemDiferentes()
+
+
+def asArvoresNaoPossuiremOsMesmosItens():
+    a1 = arvorePronta(4, 6, 8, 3, 2, 10, 9, 0, 1)
+    a2 = arvorePronta(1, 8, 10, 4, 9, 0, 6, 3, 2, 5)
+
+    assert a1 != a2
+
+
+def asArvoresPossuiremOsMesmosItensEmQuantidadesDiferentes():
+    assert arvore != arvorePronta(4, 6, 8, 3, 2, 10, 9, 0, 1, 3)
+    assert arvorePronta(4, 4, 0, 1) != arvorePronta(4, 9, 0, 1)
+    assert arvorePronta(4, 9, 0, 1) != arvorePronta(4, 4, 0, 1)
+
+
+def apenasUmaDasArvoresEstiverVazia():
+    assert ArvoreVP(None) != arvore
+    assert arvore != ArvoreVP(None)
+
+
+def oObjetoInformadoNaoForUmaArvoreValida():
+    """Arvores válidas são árvore genêrica, binária, avl e vp."""
+    assert arvore != (4, 6, 8, 3, 2, 10, 9, 0, 1)
+
+
+def asRaizesForemDiferentes():
+    assert arvorePronta(0) != arvorePronta(1)
+
+
+def testesDasFuncoes_dumpEloads_comUmaArvoreVP():
+    pickle(arvore, 'arvore_vp')
+    arv = load('arvore_vp')
+
+    assegurarQueAsArvoresVPPossuemAMesmaEstrutura(arv, arvore)
+    assert arv.tamanho == arvore.tamanho
+
+    deletar('arvore_vp')
+
+
+def assegurarQueAsArvoresVPPossuemAMesmaEstrutura(a1, a2):
+    from arvore import _IteradorPreFixado as Iterador
+
+    for n1, n2 in zip(Iterador(a1._raiz), Iterador(a2._raiz)):
+        assert n1 == n2
+        assert n1.cor == n2.cor
+
+
+def testesDasFuncoes_dumpEloads_comUmaArvoreVPVazia():
+    pickle(ArvoreVP(None), 'arvore_vpVazia')
+    arv = load('arvore_vpVazia')
+
+    assert arv.vazia
+    assert arv.tamanho is 0
+
+    deletar('arvore_vpVazia')
+
 

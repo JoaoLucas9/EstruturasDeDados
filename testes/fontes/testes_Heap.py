@@ -1,27 +1,22 @@
-from arvore import Heap, INDEFINIDO, IGUAIS, _Nodo, _IteradorPorNivel, \
-    _IteradorPosFixado
+from arvore import Heap, IGUAIS
+from uteis import INDEFINIDO
 from pytest import raises
 from erros import ItemNaoEncontrado, FalhaNaOperacao
 from pyext import naoGeraErro
 from iteruteis import vazio
+from uteistestes import maior, pickle, load, deletar
 
 
-def heapDeTestes():
-    nums = Heap(lambda x1, x2: IGUAIS if x1 == x2 else max(x1, x2))
-    nums.inserir(0)
-    nums.inserir(1)
-    nums.inserir(2)
-    nums.inserir(3)
-    nums.inserir(4)
-    nums.inserir(5)
-    nums.inserir(6)
-    nums.inserir(7)
-    nums.inserir(8)
+def novoHeap(*nums):
+    heap = Heap(maior)
 
-    return nums
+    for num in nums:
+        heap.inserir(num)
+
+    return heap
 
 
-heap = heapDeTestes()
+heap = novoHeap(0, 1, 2, 3, 4, 5, 6, 7, 8)
 
 
 def testes_oMetodo_inserir_definiraARaizDaArvoreSeElaEstiverVazia():
@@ -65,6 +60,8 @@ def assegureQueEUmHeap(heap):
 def assegureQueAPropriedadeDeOrdemEstaSatisfeita(heap):
     """Propriedade de ordem: para cada item i, os filhos de i terão um
     prioridade menor igual a de i."""
+    from arvore import _IteradorPosFixado
+
     for nodo in _IteradorPosFixado(heap._raiz):
         for filho in nodo.filhos:
             assert filho.prioridade <= nodo.prioridade
@@ -74,6 +71,8 @@ def assegureQueEUmaArvoreBinariaCompleta(heap):
     """Itera-se pelos nodos do penúltimo nível do heap até encontrar o
     primeiro que possui 0 ou 1 filho, após encontra-lo assegura-se que
     todos os nodos restantes a sua direita não possuem nenhum filho."""
+    from arvore import _IteradorPorNivel
+
     penultimoNivel = heap.niveis -1
     iterador = _IteradorPorNivel(heap._raiz, penultimoNivel)
 
@@ -250,7 +249,7 @@ def teste_oMetodo_ancestrais_geraUmErroSeOItemNaoForLocalizado():
 
 
 def testes_metodo_remover():
-    nums = heapDeTestes()
+    nums = novoHeap(0, 1, 2, 3, 4, 5, 6, 7, 8)
 
     assert nums.remover() == 8
     assegureQueEUmHeap(nums)
@@ -322,7 +321,7 @@ def testes_metodo_remover_comPrioridades():
 
 
 def testes_propriedade_tamanho_aposRemoverItens():
-    nums = heapDeTestes()
+    nums = novoHeap(0, 1, 2, 3, 4, 5, 6, 7, 8)
     nums.remover()
     nums.remover()
     nums.remover()
@@ -475,5 +474,154 @@ def testes_metodo_remover_deUmHeapComItensDuplicados():
     assert heap.remover() is 3
     assert heap.remover() is 3
     assert heap.vazio
+
+
+# dois heaps serão iguais se a prioridade de qualquer um dos itens no heap A
+# for igual a prioridade do mesmo item no heap B, isto implica que todos os
+# itens de um dos heaps devem estar presentes no outro também.
+def testes_operadorDe_igualdade_retornaTrueSe():
+    osHeapsPossuiremOsMesmosItensComAsMesmasPrioridades()
+    osHeapsEstiveremVazios()
+
+
+def osHeapsPossuiremOsMesmosItensComAsMesmasPrioridades():
+    heap1 = novoHeap(0, 1, 2, 3, 4, 5, 6, 7, 8)
+    heap2 = novoHeap(0, 3, 8, 4, 7, 2, 1, 5, 6)
+
+    assert heap1 == heap2
+
+
+def osHeapsEstiveremVazios():
+    assert Heap(None) == Heap(None)
+
+
+def testes_operadorDe_igualdade_retornaFalseSe():
+    osHeapsPossuiremOsMesmosItensComPrioridadesDiferentes()
+    osHeapsPossuiremItensDiferentes()
+    apenasUmDosHeapsEstiverVazio()
+    oObjetoInformadoNaoForUmHeap()
+    asRaizesForemDiferentes()
+    osHeapsPossuiremOsMesmosItensEmQuantidadesDiferentes()
+
+
+def osHeapsPossuiremOsMesmosItensComPrioridadesDiferentes():
+    heap1 = Heap(lambda p1, p2: IGUAIS if p1 == p2 else max(p1, p2))
+    heap1.inserir('t1', 5)
+    heap1.inserir('t2', 3)
+    heap1.inserir('t3', 5)
+    heap1.inserir('t4', 4)
+    heap1.inserir('t5', 2)
+
+    heap2 = Heap(lambda p1, p2: IGUAIS if p1 == p2 else max(p1, p2))
+    heap2.inserir('t1', 5)
+    heap2.inserir('t2', 3)
+    heap2.inserir('t3', 5)
+    heap2.inserir('t4', 3) # a prioridade da t4 é diferente
+    heap2.inserir('t5', 2)
+
+    assert heap1 != heap2
+
+
+def osHeapsPossuiremItensDiferentes():
+    heap1 = Heap(lambda p1, p2: IGUAIS if p1 == p2 else max(p1, p2))
+    heap1.inserir('t1', 5)
+    heap1.inserir('t2', 3)
+    heap1.inserir('t3', 5)
+    heap1.inserir('t4', 4)
+    heap1.inserir('t5', 2)
+
+    heap2 = Heap(lambda p1, p2: IGUAIS if p1 == p2 else max(p1, p2))
+    heap2.inserir('t1', 5)
+    heap2.inserir('t2', 3)
+    heap2.inserir('t4', 4)
+    heap2.inserir('t5', 2)
+
+    assert heap1 != heap2
+
+
+def apenasUmDosHeapsEstiverVazio():
+    assert heap != Heap(None)
+    assert Heap(None) != heap
+
+
+def oObjetoInformadoNaoForUmHeap():
+    # a estrutura da arvore binária é exatamente igual a estrutura do Heap
+    from arvore import ArvoreBinaria
+    arvore = ArvoreBinaria()
+    arvore.inserir(8)
+    arvore.inserir(7, 8)
+    arvore.inserir(5, 8)
+    arvore.inserir(6, 7)
+    arvore.inserir(2, 7)
+    arvore.inserir(1, 5)
+    arvore.inserir(4, 5)
+    arvore.inserir(0, 6)
+    arvore.inserir(3, 6)
+
+    assert heap != arvore
+    assert heap != (1, 2)
+
+
+def asRaizesForemDiferentes():
+    assert novoHeap(0) != novoHeap(1)
+
+
+def osHeapsPossuiremOsMesmosItensEmQuantidadesDiferentes():
+    assert novoHeap(0, 1, 2) != novoHeap(0, 1, 2, 1)
+    assert novoHeap(0, 1, 2, 2) != novoHeap(0, 1, 2, 1)
+    assert novoHeap(0, 1, 2, 2) != novoHeap(0, 1, 2)
+    assert novoHeap(0, 1, 2) != novoHeap(0, 1, 2, 2)
+
+
+def testesDasFuncoes_dumpEloads_comUmHeap():
+    """Assegurar que as funções pickle.dumps e pickle.loads funcionam como o
+    esperado com um Heap. Funcionar como o esperado significa que é
+    possível registrar um Heap em um arquivo utilizando a função
+    pickle.dumps e futuramente recuperá-lo utilizando a função pickle.loads.
+    """
+    pickle(heap, 'heap')
+    h = load('heap')
+
+    assegurarQueOsHeapsPossuemAMesmaEstrutura(h, heap)
+    assert h.tamanho == heap.tamanho
+
+    deletar('heap')
+
+
+def assegurarQueOsHeapsPossuemAMesmaEstrutura(h1, h2):
+    from arvore import _IteradorPreFixado as Iterador
+
+    for n1, n2 in zip(Iterador(h1._raiz), Iterador(h2._raiz)):
+        assert n1 == n2
+        assert n1.prioridade == n2.prioridade
+
+
+def testesDasFuncoes_dumpEloads_comUmHeapVazio():
+    pickle(Heap(None), 'heapVazio')
+    h = load('heapVazio')
+
+    assert h.vazio
+    assert h.tamanho is 0
+
+    deletar('heapVazio')
+
+
+def teste_metodo_eq_comparaAsPrioridadesUtilizandoOComparador():
+    """o teste visa garantir que o método __eq__ compara as prioridades dos
+    itens utilizando o comparador do Heap ao invés do operador ==.
+
+    lógica do teste: dois números, x e y estão no mesmo nível de prioridade,
+    portanto itens com a prioridade x ou y possuem prioridades iguais mesmo
+    que x != y, se as prioridades dos itens forem comparadas uitlizando ==
+    dois Heaps com os mesmos itens e com as mesmas prioridades serão
+    considerados diferentes quando deveriam ser considerados iguais."""
+    branca = [0, 1] # prioridade branca
+    h1 = Heap(lambda x1, x2: IGUAIS if x1 in branca and x2 in branca else x2)
+    h1.inserir('tarefa1', 0)
+
+    h2 = Heap(lambda x1, x2: IGUAIS if x1 in branca and x2 in branca else x2)
+    h2.inserir('tarefa1', 1)
+
+    assert h1 == h2, 'As prioridades devem estar sendo comparadas com =='
 
 

@@ -4,23 +4,24 @@ from pytest import raises
 from random import sample, randint
 from uteis import executar
 from pyext import naoGeraErro
+from uteistestes import maior, pickle, load, deletar
 
 
 def arvoreVazia():
-    return ArvoreAVL(lambda x1, x2: IGUAIS if x1 == x2 else max(x1, x2))
+    return ArvoreAVL(maior)
 
 
 def arvoreDeTestes():
     nums = arvoreVazia()
-    nums.inserir(40)
-    nums.inserir(60)
-    nums.inserir(80)
-    nums.inserir(30)
-    nums.inserir(20)
-    nums.inserir(100)
-    nums.inserir(90)
-    nums.inserir(0)
+    nums.inserir(4)
+    nums.inserir(6)
+    nums.inserir(8)
+    nums.inserir(3)
+    nums.inserir(2)
     nums.inserir(10)
+    nums.inserir(9)
+    nums.inserir(0)
+    nums.inserir(1)
 
     return nums
 
@@ -104,10 +105,10 @@ def teste_propiedade_tamanho_aposInserirAlgunsItens():
 
 
 def teste_metodo_pai():
-    assert arvore.pai(80) == 90
-    assert arvore.pai(30) == 60
-    assert arvore.pai(40) == 30
-    assert arvore.pai(60) == INDEFINIDO
+    assert arvore.pai(8) == 9
+    assert arvore.pai(3) == 6
+    assert arvore.pai(4) == 3
+    assert arvore.pai(6) == INDEFINIDO
 
 
 def teste_metodo_pai_geraUmErroSeOItemNaoForLocalizado():
@@ -116,9 +117,9 @@ def teste_metodo_pai_geraUmErroSeOItemNaoForLocalizado():
 
 
 def teste_metodo_filhos():
-    assert arvore.filhos(20) == ()
-    assert arvore.filhos(90) == (80, 100)
-    assert arvore.filhos(arvore.raiz) == (30, 90)
+    assert arvore.filhos(2) == ()
+    assert arvore.filhos(9) == (8, 10)
+    assert arvore.filhos(arvore.raiz) == (3, 9)
 
 
 def teste_metodo_filhos_geraUmErroSeOItemNaoForLocalizado():
@@ -136,7 +137,7 @@ def teste_metodo_menor_geraUmErroSeAArvoreEstiverVazia():
 
 
 def teste_metodo_maior():
-    assert arvore.maior() == 100
+    assert arvore.maior() == 10
 
 
 def teste_metodo_maior_geraUmErroSeAArvoreEstiverVazia():
@@ -145,15 +146,15 @@ def teste_metodo_maior_geraUmErroSeAArvoreEstiverVazia():
 
 
 def teste_operador_in():
-    assert 100 in arvore
     assert 10 in arvore
+    assert 1 in arvore
     assert arvore.raiz in arvore
 
     assert -70 not in arvore
 
 
 def teste_iterador():
-    assert list(arvore) == [0, 20, 10, 40, 30, 80, 100, 90, 60]
+    assert list(arvore) == [0, 2, 1, 4, 3, 8, 10, 9, 6]
 
 
 def teste_IteradorPosFixado_iterarSobreUmaArvoreVazia():
@@ -163,7 +164,7 @@ def teste_IteradorPosFixado_iterarSobreUmaArvoreVazia():
 
 
 def teste_iterador_prefixado():
-    assert list(arvore.preFixado()) == [60, 30, 10, 0, 20, 40, 90, 80, 100]
+    assert list(arvore.preFixado()) == [6, 3, 1, 0, 2, 4, 9, 8, 10]
 
 
 def teste_IteradorPreFixado_iterarSobreUmaArvoreVazia():
@@ -173,8 +174,7 @@ def teste_IteradorPreFixado_iterarSobreUmaArvoreVazia():
 
 
 def teste_iterador_interfixado():
-    assert list(arvore.interFixado()) == [0, 10, 20, 30, 40, 60, 80, 90,
-                                          100]
+    assert list(arvore.interFixado()) == [0, 1, 2, 3, 4, 6, 8, 9, 10]
 
 
 def teste_IteradorInterFixado_iterarSobreUmaArvoreVazia():
@@ -184,8 +184,8 @@ def teste_IteradorInterFixado_iterarSobreUmaArvoreVazia():
 
 
 def teste_metodo_ancestrais():
-    assert list(arvore.ancestrais(20)) == [10, 30, 60]
-    assert list(arvore.ancestrais(90)) == [60]
+    assert list(arvore.ancestrais(2)) == [1, 3, 6]
+    assert list(arvore.ancestrais(9)) == [6]
     assert list(arvore.ancestrais(arvore.raiz)) == []
 
 
@@ -196,7 +196,7 @@ def teste_metodo_ancestrais_geraUmErroSeOItemNaoForLocalizado():
 
 def teste_metodo_altura():
     assert arvore.altura(0) == 0
-    assert arvore.altura(90) == 1
+    assert arvore.altura(9) == 1
     assert arvore.altura() == arvore.altura(arvore.raiz) == 3
 
 
@@ -217,81 +217,81 @@ def teste_metodo_remover():
     90 (raiz) - nodo interno 2 filhos, rebalanceamento ✓
     """
     nums = arvoreDeTestes()
-    nums.remover(30)
+    nums.remover(3)
 
-    assert nums.raiz is 60
-    assert nums.pai(10) == nums.pai(90) == 60
-    assert nums.pai(0) == nums.pai(40) == 10
-    assert nums.pai(20) == 40
-    assert nums.pai(80) == nums.pai(100) == 90
-    assert nums.filhos(60) == (10, 90)
-    assert nums.filhos(10) == (0, 40)
-    assert nums.filhos(40) == (20, )
-    assert nums.filhos(90) == (80, 100)
-    assert nums.filhos(0) == nums.filhos(20) == nums.filhos(80) ==\
-           nums.filhos(100) == tuple()
+    assert nums.raiz is 6
+    assert nums.pai(1) == nums.pai(9) == 6
+    assert nums.pai(0) == nums.pai(4) == 1
+    assert nums.pai(2) == 4
+    assert nums.pai(8) == nums.pai(10) == 9
+    assert nums.filhos(6) == (1, 9)
+    assert nums.filhos(1) == (0, 4)
+    assert nums.filhos(4) == (2, )
+    assert nums.filhos(9) == (8, 10)
+    assert nums.filhos(0) == nums.filhos(2) == nums.filhos(8) ==\
+           nums.filhos(10) == tuple()
 
     nums.remover(0)
 
-    assert nums.raiz is 60
-    assert nums.pai(20) == nums.pai(90) == 60
-    assert nums.pai(10) == nums.pai(40) == 20
-    assert nums.pai(80) == nums.pai(100) == 90
-    assert nums.filhos(60) == (20, 90)
-    assert nums.filhos(20) == (10, 40)
-    assert nums.filhos(90) == (80, 100)
-    assert nums.filhos(10) == nums.filhos(40) == nums.filhos(80) == \
-           nums.filhos(100) == tuple()
+    assert nums.raiz is 6
+    assert nums.pai(2) == nums.pai(9) == 6
+    assert nums.pai(1) == nums.pai(4) == 2
+    assert nums.pai(8) == nums.pai(10) == 9
+    assert nums.filhos(6) == (2, 9)
+    assert nums.filhos(2) == (1, 4)
+    assert nums.filhos(9) == (8, 10)
+    assert nums.filhos(1) == nums.filhos(4) == nums.filhos(8) == \
+           nums.filhos(10) == tuple()
 
-    nums.remover(80)
-    nums.remover(40)
+    nums.remover(8)
+    nums.remover(4)
 
-    assert nums.raiz is 60
-    assert nums.pai(20) == nums.pai(90) == 60
-    assert nums.pai(10) == 20
-    assert nums.pai(100) == 90
-    assert nums.filhos(60) == (20, 90)
-    assert nums.filhos(20) == (10, )
-    assert nums.filhos(90) == (100, )
-    assert nums.filhos(10) == nums.filhos(100) == tuple()
+    assert nums.raiz is 6
+    assert nums.pai(2) == nums.pai(9) == 6
+    assert nums.pai(1) == 2
+    assert nums.pai(10) == 9
+    assert nums.filhos(6) == (2, 9)
+    assert nums.filhos(2) == (1, )
+    assert nums.filhos(9) == (10, )
+    assert nums.filhos(1) == nums.filhos(10) == tuple()
 
-    nums.remover(20)
+    nums.remover(2)
 
-    assert nums.raiz is 60
-    assert nums.pai(10) == nums.pai(90) == 60
-    assert nums.pai(100) == 90
-    assert nums.filhos(60) == (10, 90)
-    assert nums.filhos(90) == (100,)
-    assert nums.filhos(10) == nums.filhos(100) == tuple()
+    assert nums.raiz is 6
+    assert nums.pai(1) == nums.pai(9) == 6
+    assert nums.pai(10) == 9
+    assert nums.filhos(6) == (1, 9)
+    assert nums.filhos(9) == (10,)
+    assert nums.filhos(1) == nums.filhos(10) == tuple()
 
-    nums.remover(10)
+    nums.remover(1)
 
-    assert nums.raiz is 90
-    assert nums.pai(60) == nums.pai(100) == 90
-    assert nums.filhos(90) == (60, 100)
-    assert nums.filhos(60) == nums.filhos(100) == tuple()
+    assert nums.raiz is 9
+    assert nums.pai(6) == nums.pai(10) == 9
+    assert nums.filhos(9) == (6, 10)
+    assert nums.filhos(6) == nums.filhos(10) == tuple()
 
-    nums.inserir(80)
-    nums.remover(90)
+    nums.inserir(8)
+    nums.remover(9)
 
-    assert nums.raiz is 80
-    assert nums.pai(60) == nums.pai(100) == 80
-    assert nums.filhos(80) == (60, 100)
-    assert nums.filhos(60) == nums.filhos(100) == tuple()
+    assert nums.raiz is 8
+    assert nums.pai(6) == nums.pai(10) == 8
+    assert nums.filhos(8) == (6, 10)
+    assert nums.filhos(6) == nums.filhos(10) == tuple()
 
     nums.remover(nums.raiz)
 
-    assert nums.raiz == 100
-    assert nums.pai(60) == 100
-    assert nums.filhos(100) == (60, )
-    assert nums.filhos(60) == tuple()
+    assert nums.raiz == 10
+    assert nums.pai(6) == 10
+    assert nums.filhos(10) == (6, )
+    assert nums.filhos(6) == tuple()
 
-    nums.remover(60)
+    nums.remover(6)
 
-    assert nums.raiz == 100
-    assert nums.filhos(100) == tuple()
+    assert nums.raiz == 10
+    assert nums.filhos(10) == tuple()
 
-    nums.remover(100)
+    nums.remover(10)
 
 
 def teste_metodo_remover2():
@@ -340,27 +340,25 @@ def teste_metodo_remover3():
 
 def teste_metodo_remover4():
     nums = arvoreDeTestes()
-    nums.inserir(50)
-    nums.remover(30)
+    nums.inserir(5)
+    nums.remover(3)
 
-    assert nums.raiz == 60
-    assert nums.pai(40) == 60
-    assert nums.pai(90) == 60
-    assert nums.pai(10) == nums.pai(50) == 40
-    assert nums.pai(0) == nums.pai(20) == 10
-    assert nums.pai(80) == nums.pai(100) == 90
-    assert nums.filhos(60) == (40, 90)
-    assert nums.filhos(40) == (10, 50)
-    assert nums.filhos(10) == (0, 20)
-    assert nums.filhos(90) == (80, 100)
-    assert nums.filhos(0) == nums.filhos(20) == nums.filhos(50) == \
-           nums.filhos(80) == nums.filhos(100) == tuple()
+    assert nums.raiz == 6
+    assert nums.pai(4) == 6
+    assert nums.pai(9) == 6
+    assert nums.pai(1) == nums.pai(5) == 4
+    assert nums.pai(0) == nums.pai(2) == 1
+    assert nums.pai(8) == nums.pai(10) == 9
+    assert nums.filhos(6) == (4, 9)
+    assert nums.filhos(4) == (1, 5)
+    assert nums.filhos(1) == (0, 2)
+    assert nums.filhos(9) == (8, 10)
+    assert nums.filhos(0) == nums.filhos(2) == nums.filhos(5) == \
+           nums.filhos(8) == nums.filhos(10) == tuple()
 
 
 def teste_metodo_remover5():
-    nums = arvoreDeTestes()
-    nums.inserir(35)
-    nums.inserir(50)
+    nums = novaArvore(40, 60, 80, 30, 20, 100, 90, 0, 10, 35, 50)
     nums.remover(30)
 
     assert nums.raiz == 60
@@ -384,9 +382,7 @@ def teste_metodo_remover5():
 def teste_metodo_remover6():
     """A árvore possui apenas 2 itens, a raiz e seu filho a esquerda,
     quero remover a raiz"""
-    nums = arvoreVazia()
-    nums.inserir(100)
-    nums.inserir(60)
+    nums = novaArvore(100, 60)
     nums.remover(100)
 
     assert nums.raiz == 60
@@ -589,21 +585,21 @@ def teste_metodo_remover_multiplosRebalanceamentos4():
 def teste_propiedade_tamanho_aposRemoverAlgunsItens():
     nums = arvoreDeTestes()
 
-    nums.remover(40)
+    nums.remover(4)
     assert nums.tamanho == 8
 
-    nums.remover(60)
-    nums.remover(80)
+    nums.remover(6)
+    nums.remover(8)
     assert nums.tamanho == 6
 
-    nums.remover(30)
-    nums.remover(20)
-    nums.remover(100)
+    nums.remover(3)
+    nums.remover(2)
+    nums.remover(10)
     assert nums.tamanho == 3
 
-    nums.remover(90)
+    nums.remover(9)
     nums.remover(0)
-    nums.remover(10)
+    nums.remover(1)
     assert nums.tamanho == 0
 
 
@@ -613,8 +609,8 @@ def teste_metodo_remover_geraUmErroSeOItemNaoForLocalizado():
 
 
 def teste_metodo_filhoEsquerdo():
-    assert arvore.filhoEsquerdo(arvore.raiz) is 30
-    assert arvore.filhoEsquerdo(90) is 80
+    assert arvore.filhoEsquerdo(arvore.raiz) is 3
+    assert arvore.filhoEsquerdo(9) is 8
 
 
 def teste_metodo_filhoEsquerdo_geraUmErroSeOItemNaoPossuirUmFilhoAEsquerda():
@@ -628,8 +624,8 @@ def teste_metodo_filhoEsquerdo_geraUmErroSeOItemNaoForLocalizado():
 
 
 def teste_metodo_filhoDireito():
-    assert arvore.filhoDireito(arvore.raiz) is 90
-    assert arvore.filhoDireito(10) is 20
+    assert arvore.filhoDireito(arvore.raiz) is 9
+    assert arvore.filhoDireito(1) is 2
 
 
 def teste_metodo_filhoDireito_geraUmErroSeOItemNaoPossuirUmFilhoADireita():
@@ -775,3 +771,104 @@ def teste_metodo_remover_duplicados2():
     arvore.remover(2)
     
     assegurarQueEUmaArvoreAVL(arvore)
+
+
+def testes_operadorDe_igualdade_retornaTrueSe():
+    asArvoresPossuiremOsMesmosItensNasMesmasQuantidade()
+    asArvoresEstiveremVazias()
+    aArvoreGenericaPossuirOsMesmosItensQueAArvoreAVL()
+    aArvoreVPPossuirOsMesmosItensQueAArvoreAVL()
+
+
+def asArvoresPossuiremOsMesmosItensNasMesmasQuantidade():
+    arvore1 = novaArvore(4, 6, 8, 3, 2, 10, 9, 0, 1)
+    arvore2 = novaArvore(3, 10, 6, 4, 9, 1, 8, 2, 0)
+
+    assert arvore1 == arvore2
+
+
+def asArvoresEstiveremVazias():
+    assert arvoreVazia() == arvoreVazia()
+
+
+def aArvoreGenericaPossuirOsMesmosItensQueAArvoreAVL():
+    from testes_arvore import arvore as arvoreG
+    arvore = ArvoreAVL(maior)
+    arvore.inserir(0)
+    arvore.inserir(1)
+    arvore.inserir(2)
+    arvore.inserir(3)
+    arvore.inserir(4)
+    arvore.inserir(5)
+    arvore.inserir(6)
+    arvore.inserir(7)
+    arvore.inserir(None)
+    arvore.inserir(8)
+
+    assert arvore == arvoreG
+
+
+def aArvoreVPPossuirOsMesmosItensQueAArvoreAVL():
+    from testes_ArvoreVP import arvore as arvoreVP
+
+    assert arvore == arvoreVP
+
+
+def testes_operadorDe_igualdade_retornaFalseSe():
+    asArvoresNaoPossuiremOsMesmosItens()
+    asArvoresPossuiremOsMesmosItensEmQuantidadesDiferentes()
+    apenasUmaDasArvoresEstiverVazia()
+    asRaizesForemDiferentes()
+    oObjetoInformadoNaoForUmaArvoreValida()
+
+
+def asArvoresNaoPossuiremOsMesmosItens():
+    assert arvore != novaArvore(6, 8, 3, 2, 10, 9, 0, 1)
+    assert arvore != novaArvore(5, 4, 6, 8, 3, 2, 10, 9, 0, 1)
+
+
+def asArvoresPossuiremOsMesmosItensEmQuantidadesDiferentes():
+    assert arvore != novaArvore(4, 4, 8, 3, 2, 10, 9, 0, 1)
+    assert novaArvore(4, 4, 0, 1) != novaArvore(4, 9, 0, 1)
+    assert novaArvore(4, 9, 0, 1) != novaArvore(4, 4, 0, 1)
+
+
+def apenasUmaDasArvoresEstiverVazia():
+    assert arvore != ArvoreAVL(None)
+    assert ArvoreAVL(None) != arvore
+
+
+def asRaizesForemDiferentes():
+    assert novaArvore(0) != novaArvore(1)
+
+
+def oObjetoInformadoNaoForUmaArvoreValida():
+    """árvore válida pode ser uma árvore genêrica, binária, avl ou vp."""
+    assert arvore != [4, 6, 8, 3, 2, 10, 9, 0, 1]
+
+
+def testesDasFuncoes_dumpEloads_comUmaArvoreAVL():
+    pickle(arvore, 'avl')
+    arv = load('avl')
+
+    assegurarQueAsArvoresAVLPossuemAMesmaEstrutura(arv, arvore)
+    assert arv.tamanho == arvore.tamanho
+
+    deletar('avl')
+
+
+def assegurarQueAsArvoresAVLPossuemAMesmaEstrutura(a1, a2):
+    from arvore import _IteradorPreFixado as Iterador
+
+    for n1, n2 in zip(Iterador(a1._raiz), Iterador(a2._raiz)):
+        assert n1 == n2
+
+
+def testesDasFuncoes_dumpE1loads_comUmaArvoreAVLVazia():
+    pickle(arvoreVazia(), 'avlVazia')
+    arv = load('avlVazia')
+
+    assert arv.vazia
+    assert arv.tamanho is 0
+
+    deletar('avlVazia')

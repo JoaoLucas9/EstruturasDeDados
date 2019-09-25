@@ -1,9 +1,10 @@
 from arvore import arvore as Arvore
-from arvore import INDEFINIDO
+from uteis import INDEFINIDO
 from pytest import raises
 from erros import ItemNaoEncontrado, ParametroNaoInformado
 from pyext import naoGeraErro
 from iteruteis import vazio
+from uteistestes import pickle, load, deletar
 
 
 def arvoreDeTestes():
@@ -537,5 +538,189 @@ def testes_metodo_remover_deUmaArvoreQuePossuiItensDuplicados():
     assert arvore.filhos('eu') == ('musicas', )
     assert arvore.filhos('en') == ('cult', 'comidas')
     assert arvore.filhos('br') == ('cult', )
+
+
+def testes_oOperadorDe_igualdade_retornaTrueSe():
+    asArvoresPossuiremAMesmaEstrutura()
+    asArvoresEstiveremVazias()
+    comparadaComUmaArvoreAVLComAMesmaEstrutura()
+    comparadaComUmaArvoreVPComAMesmaEstrutura()
+
+
+# duas árvores serão iguais se o pai e os filhos de qualquer um dos itens
+# na árvore A forem iguais ao pai e aos filhos, respectivamente, do mesmo item
+# na árvore B, isto implica que todos os itens de uma das árvores devem
+# estar presentes na outra também.
+def asArvoresPossuiremAMesmaEstrutura():
+    """Mesma estrutura significa que o pai e os filhos de qualquer um dos
+    itens na árvore A forem iguais ao pai e aos filhos, respectivamente,
+    do mesmo item na árvore B e vice-versa."""
+    assert arvoreDeTestes2() == arvoreDeTestes2()
+
+
+def asArvoresEstiveremVazias():
+    assert Arvore() == Arvore()
+
+
+def comparadaComUmaArvoreAVLComAMesmaEstrutura():
+    from testes_ArvoreAVL import arvore as arvoreAVL
+
+    arvore = Arvore()
+    arvore.inserir(6)
+    arvore.inserir(3, 6)
+    arvore.inserir(9, 6)
+    arvore.inserir(1, 3)
+    arvore.inserir(4, 3)
+    arvore.inserir(8, 9)
+    arvore.inserir(10, 9)
+    arvore.inserir(0, 1)
+    arvore.inserir(2, 1)
+
+    assert arvore == arvoreAVL
+
+
+def comparadaComUmaArvoreVPComAMesmaEstrutura():
+    from testes_ArvoreVP import arvore as arvoreVP
+
+    arvore = Arvore()
+    arvore.inserir(6)
+    arvore.inserir(3, 6)
+    arvore.inserir(9, 6)
+    arvore.inserir(1, 3)
+    arvore.inserir(4, 3)
+    arvore.inserir(8, 9)
+    arvore.inserir(10, 9)
+    arvore.inserir(0, 1)
+    arvore.inserir(2, 1)
+
+    assert arvore == arvoreVP
+
+
+def testes_oOperadorDe_igualdade_retornaFalseSe():
+    """As árvores são diferentes mas os seus iteradores pré ou pós fixado
+    são iguais"""
+    osIteradoresPreFixadosDasArvoresSaoIguaisMasAsEstrutursDelasNao()
+    osIteradoresPosFixadosDasArvoresSaoIguaisMasAsEstrutursDelasNao()
+    aOrdemDosFilhosDeUmItemEmUmaArvoreDiferirDaOrdemDosFilhosDoItemNaOutra()
+    osFIlhosDeUmDosItensForDiferenteDosFilhosDoItemNaOutraArvore()
+    oObjetoInformadoNaoForUmaArvore()
+    asRaizesDasArvoresForemDiferentes()
+    apenasUmaDasArvoresEstiverVazia()
+
+
+def osIteradoresPreFixadosDasArvoresSaoIguaisMasAsEstrutursDelasNao():
+    arvore1 = Arvore()
+    arvore1.inserir(0)
+    arvore1.inserir(1, 0)
+    arvore1.inserir(2, 1)
+
+    arvore2 = Arvore()
+    arvore2.inserir(0)
+    arvore2.inserir(1, 0)
+    arvore2.inserir(2, 0)
+
+    assert arvore1 != arvore2
+
+
+def osIteradoresPosFixadosDasArvoresSaoIguaisMasAsEstrutursDelasNao():
+    arvore1 = Arvore()
+    arvore1.inserir(0)
+    arvore1.inserir(1, 0)
+    arvore1.inserir(2, 1)
+
+    arvore2 = Arvore()
+    arvore2.inserir(0)
+    arvore2.inserir(2, 0)
+    arvore2.inserir(1, 0)
+
+    assert arvore1 != arvore2
+
+
+def aOrdemDosFilhosDeUmItemEmUmaArvoreDiferirDaOrdemDosFilhosDoItemNaOutra():
+    # as árvores 1 e 2 são quase iguais, as raizes de ambas são iguais bem
+    # como os filhos dos seus itens, contudo a ordem dos filhos do 0
+    # diferem, por isso 1 e 2 são diferentes
+    arvore1 = Arvore()
+    arvore1.inserir(0)
+    arvore1.inserir(1, 0)
+    arvore1.inserir(2, 0) # filhos do 0: 1 e 2
+
+    arvore2 = Arvore()
+    arvore2.inserir(0)
+    arvore2.inserir(2, 0)
+    arvore2.inserir(1, 0) # filhos do 0: 2 e 1
+
+    assert arvore1 != arvore2
+
+
+def osFIlhosDeUmDosItensForDiferenteDosFilhosDoItemNaOutraArvore():
+    arvore1 = Arvore()
+    arvore1.inserir(0)
+    arvore1.inserir(1, 0)
+    arvore1.inserir(2, 0) # filhos do 0: 1 e 2
+
+    arvore2 = Arvore()
+    arvore2.inserir(0)
+    arvore2.inserir(1, 0)
+    arvore2.inserir(2, 0)
+    arvore2.inserir(3, 0) # filhos do 0: 1, 2 e 3
+    # os filhos do 0 na arvore1 são diferentes dos filhos do 0 na arvore2
+
+    assert arvore1 != arvore2
+
+
+def oObjetoInformadoNaoForUmaArvore():
+    assert arvore != 1
+
+
+def asRaizesDasArvoresForemDiferentes():
+    arvore = Arvore()
+    arvore.inserir(0)
+
+    arvore1 = Arvore()
+    arvore1.inserir(1)
+
+    assert arvore != arvore1
+
+    arvore.inserir(2, 0)
+    arvore.inserir(3, 0)
+
+    arvore1.inserir(2, 1)
+    arvore1.inserir(3, 1)
+
+    assert arvore != arvore1
+
+
+def apenasUmaDasArvoresEstiverVazia():
+    assert arvore != Arvore()
+    assert Arvore() != arvore
+
+
+def testesDasFuncoes_dumpEloads_comUmaArvore():
+    """Assegurar que as funções pickle.dumps e pickle.loads funcionam como o
+    esperado com uma árvore. Funcionar como o esperado significa que é
+    possível registrar uma árvore em um arquivo utilizando a função
+    pickle.dumps e futuramente recuperá-la utilizando a função pickle.loads.
+
+    É importante salientar que a árvore recuperada deve ser exatamente igual à
+    árvore registrada.
+    """
+    pickle(arvore, 'arvore')
+    arv = load('arvore')
+
+    assert arv == arvore
+    assert arv.tamanho == arvore.tamanho
+
+    deletar('arvore')
+
+
+def testesDasFuncoes_dumpEloads_comUmaArvoreVazia():
+    pickle(Arvore(), 'arvoreVazia')
+    arv = load('arvoreVazia')
+
+    assert arv.vazia
+    assert arv.tamanho is 0
+
+    deletar('arvoreVazia')
 
 

@@ -19,10 +19,9 @@ Versão: 0.1 beta
 from erros import ItemNaoEncontrado, ParametroNaoInformado, FalhaNaOperacao, \
     ColecaoVazia
 from iteruteis import tamanho as contar
-from uteis import IteradorVazio, NAO_INFORMADO, INDEFINIDO
+from uteis import IteradorVazio, NAO_INFORMADO, INDEFINIDO, iguais
 from iteruteis import vazio
 from itertools import zip_longest
-
 
 def _itemNaoEncontrado(mensagem=NAO_INFORMADO):
     if mensagem is NAO_INFORMADO:
@@ -64,11 +63,29 @@ def _parametroNaoInformado(b, parametro):
         raise ParametroNaoInformado(parametro)
 
 
+def _nodos(arvore):
+    """Retorna um iterador pré fixado que percorre por todos os nodos da
+    árvore."""
+    return IteradorVazio() if arvore.tamanho is 0 else _IteradorPreFixado(
+        arvore._raiz)
+
+
+def _arvoreVP(iteravel, comparador):
+    arvoreVP = ArvoreVP(comparador)
+
+    for item in iteravel:
+        arvoreVP.inserir(item)
+    return arvoreVP
+
+
+
 IGUAIS = 'as prioridades são iguais_Recife_PE 01/07/2019 14:42h'
 PRETO = 0
 VERMELHO = 1
 
-
+# TODO ? testar as aŕvores que recebem um comparador para garantir que elas
+#  utilizem apenas o comparador para comparar dois itens e nunca usem o
+#  operador ==
 class arvore:
     """Árvore genérica não ordenada.
 
@@ -167,6 +184,32 @@ class arvore:
         if self.vazia:
             return IteradorVazio()
         return _Iterador(_IteradorPosFixado(self._raiz))
+
+
+    def __eq__(self, obj):
+        """Compara self com obj.
+
+        Retorna true se forem iguais, false caso contrário.
+
+        Serão iguais se: 1º obj for uma arvore, ArvoreBinaria, ArvoreVP ou
+        ArvoreAVL e 2º o pai e os filhos de qualquer um dos itens
+        em self forem iguais ao pai e aos filhos, respectivamente, do
+        mesmo item em obj e o contrário também deve ser verdadeiro.
+
+        Uma consequência do 2º requisito é que todos os itens em self devem
+        estar em 'obj' e todos os itens de 'obj' devem estar em self.
+        """
+        if not isinstance(obj, (arvore, ArvoreVP, ArvoreAVL)):
+            return False
+        return self._tamanhosIguais(obj) and self._estruturasIguais(obj)
+
+
+    def _tamanhosIguais(self, arvore):
+        return self.tamanho == arvore.tamanho
+
+
+    def _estruturasIguais(self, arvore):
+        return all(n1 == n2 for n1, n2 in zip(_nodos(self), _nodos(arvore)))
 
 
     def preFixado(self):
@@ -304,6 +347,39 @@ class _Nodo:
         self.item = item
         self.pai = pai
         self.filhos = []
+
+
+    def __eq__(self, obj):
+        """Dois nodos serão iguais se eles possuirem itens, pais e filhos
+        iguais."""
+        if not isinstance(obj, (_Nodo, _NodoBin)):
+            return False
+
+        itensIguais = self.item == obj.item
+        paisIguais = self._osPaisSaoIguais(obj)
+        filhosIguais = self._osFilhosSaoIguais(obj)
+
+        return itensIguais and paisIguais and filhosIguais
+
+
+    def _osPaisSaoIguais(self, nodo):
+        """Compara o pai de self com o pai de nodo.
+
+        Retorna true se forem iguai, false caso contrário.
+        """
+        paiSelf = getattr(self.pai, 'item', None)
+        paiNodo = getattr(nodo.pai, 'item', None)
+
+        return paiSelf == paiNodo
+
+
+    def _osFilhosSaoIguais(self, nodo):
+        """Compara os filhoa de self com os filhoa de nodo.
+
+        Retorna true se forem iguai, false caso contrário.
+        """
+        return iguais((n.item for n in self.filhos), (n.item for n in
+                                                      nodo.filhos))
 
 
 class _Iterador:
@@ -507,6 +583,9 @@ class Heap:
            própios itens se no momento de inseri-los não forem informadas,
            explicitamente, suas prioridades, caso elas sejam, então estes
            objetos 'prioridade' serão informados.
+           Se você deseja registrar e carregar o Heap em/de um arquivo
+           utilizando as funções pickle.dump() e pickle.load(), o comparador
+           não pode ser uma função lambda.
         """
         self._raiz = None
         self._tamanho = 0
@@ -657,6 +736,41 @@ class Heap:
         return _Iterador(_IteradorInterFixado(self._raiz))
 
 
+    def __eq__(self, obj):
+        """Compara self com obj.
+
+        Serão iguais se: 1º obj for um Heap e 2º para qualquer item x em self,
+        x também está presente em obj e a prioridade é a mesma em ambos.
+
+        Os itens serão comparados com o operador ==, enquanto que as
+        prioridades são comparadas com o comparador de self.
+
+        O tempo de execução deste método é de O(n²), onde n o tamanho de self.
+        """
+        if not isinstance(obj, Heap) or self.tamanho != obj.tamanho:
+            return False
+        nodos = list(_nodos(obj))
+
+        return all(self._removerDe(nodos, n) for n in _nodos(self))
+
+
+    def _removerDe(self, lista, nodo):
+        """Remove um nodo da lista igual ao nodo informado.
+
+        Dois nodos serão iguais se os itens e as prioridades forem iguais.
+
+        Os itens serão comparados com o operador ==, enquanto que as
+        prioridades são comparadas com o comparador de self.
+
+        Retorna true se algum nodo for removido, false caso contrário.
+        """
+        for i, n in enumerate(lista):
+            if nodo.item == n.item and self._maior(nodo, n) is IGUAIS:
+                del lista[i]
+                return True
+        return False
+
+
     def pai(self, item):
         """Retorna o pai do item.
 
@@ -665,7 +779,9 @@ class Heap:
         Exceções
            :exception ItemNaoEncontrado se o item não for encontrado
         """
-        return INDEFINIDO if item == self.topo else self._nodo(item).pai.item
+        nodo = self._nodo(item)
+
+        return INDEFINIDO if nodo.pai is None else nodo.pai.item
 
 
     def _nodo(self, item, funcao=_itemNaoEncontrado):
@@ -786,12 +902,17 @@ class Heap:
 
 
 class _NodoBin:
+    # TODO refatorar, acho que é bom remover o __hash__, talvez remover o
+    #  __eq__ também
 
     def __init__(self, item, pai=None, esquerdo=None, direito=None):
         self.item = item
         self.pai = pai
         self.esquerdo = esquerdo
         self.direito = direito
+
+
+    __hash__ = object.__hash__
 
 
     @property
@@ -803,6 +924,43 @@ class _NodoBin:
         return self.esquerdo if self.esquerdo is not None else self.direito,
 
 
+    # TODO refatorar
+    def __eq__(self, obj):
+        # funciona apenas com _NodoBin
+        #futuras versões devem aceitar _Nodo
+        if not isinstance(obj, _NodoBin):
+            return False
+
+        paiSelf = None if self.pai is None else self.pai.item
+        paiObj = None if obj.pai is None else obj.pai.item
+
+        if paiSelf != paiObj:
+            print('filhos diferentes')
+            print(self)
+            print(obj)
+
+        return self.item == obj.item and paiSelf == paiObj and \
+                                     self._osFilhosSaoIguais(obj)
+
+
+    def __repr__(self):
+        return str(self.item)
+
+
+    # TODO refatorar
+    def _osFilhosSaoIguais(self, nodo: '_NodoBin'):
+        """Compara os filhos de self com os filhos de nodo.
+
+        :return true se os filhos forem iguais, false caso contrário.
+        """
+        esquerdoSelf = None if self.esquerdo is None else self.esquerdo.item
+        direitoSelf = None if self.direito is None else self.direito.item
+        esquerdoNodo = None if nodo.esquerdo is None else nodo.esquerdo.item
+        direitoNodo = None if nodo.direito is None else nodo.direito.item
+
+        return esquerdoSelf == esquerdoNodo and direitoSelf == direitoNodo
+
+
 class ArvoreAVL:
 
 
@@ -811,7 +969,11 @@ class ArvoreAVL:
         Parâmetros
             :param comparador Callable capaz de comparar dois itens
             quaisquer da árvore. Deve retornar o maior deles ou a constante
-            arvore.IGUAIS se os valores comparados forem iguais."""
+            arvore.IGUAIS se os valores comparados forem iguais.
+            Se você desejar registrar ou carregar esta árvore em/de um arquivo
+            utilizando as funções pickle.dump() ou pickle.load() o
+            comparador não pode ser uma função lambda.
+        """
         self._raiz = None
         self._maior = comparador
         self._tamanho = 0
@@ -984,7 +1146,7 @@ class ArvoreAVL:
         """
         nodo = self._nodo(item)
 
-        return INDEFINIDO if nodo is self._raiz else nodo.pai.item
+        return INDEFINIDO if nodo.pai is None else nodo.pai.item
 
 
     def filhos(self, item):
@@ -1015,6 +1177,39 @@ class ArvoreAVL:
         if self.vazia:
             return IteradorVazio()
         return _Iterador(_IteradorInterFixado(self._raiz))
+
+
+    def __eq__(self, obj):
+        """Compara self com obj.
+
+        Serão iguais se: 1º obj for um arvore, ArvoreBinaria, ArvoreVP ou
+        ArvoreAVL e 2º para qualquer item x em self, x também está presente em
+        obj na mesma quantidade.
+
+        Os itens de self e de obj serão comparados utilizando o comparador de
+        self.
+        """
+        if not isinstance(obj, (arvore, ArvoreVP, ArvoreAVL)):
+            return False
+
+        if isinstance(obj, arvore):
+            obj = _arvoreVP(obj, self._maior)
+
+        return self._tamanhosIguais(obj) and self._itensEQuantidadesIguais(obj)
+
+
+    def _tamanhosIguais(self, arvore):
+        return self.tamanho == arvore.tamanho
+
+
+    def _itensEQuantidadesIguais(self, arvore):
+        iterador = zip(self.interFixado(), arvore.interFixado())
+
+        return all(self._saoIguais(i1, i2) for i1, i2 in iterador)
+
+
+    def _saoIguais(self, item1, item2):
+        return self._maior(item1, item2) is IGUAIS
 
 
     def menor(self):
@@ -1111,7 +1306,7 @@ class ArvoreAVL:
             self._raiz = None
         else: # considera-se que possui apenas um filho
             self._raiz = self._filho(self._raiz)
-            self._raiz.pai = INDEFINIDO
+            self._raiz.pai = None
 
 
     def _remover(self, nodo):
@@ -1188,6 +1383,12 @@ class ArvoreVP:
 
 
     def __init__(self, comparador):
+        """:param comparador Callable que compara dois itens desta árvore e
+        retorna o maior deles ou a constante arvore.IGUAIS se forem iguais.
+        O comparador deve receber dois argumentos.
+        Se você desejar registrar ou carregar esta árvore em/de um arquivo
+        utilizando as funções pickle.dump ou pickle.load o comparador não
+        pode ser uma função lambda."""
         self._raiz = None
         self._maior = comparador
         self._tamanho = 0
@@ -1278,6 +1479,7 @@ class ArvoreVP:
             return u
         else:
             b = self._reestruturar(u, v, z)
+            # TODO verificar "TypeError: unhashable type"
             self._recolorir({b: PRETO, b.esquerdo:VERMELHO, b.direito:VERMELHO})
             return b
 
@@ -1355,6 +1557,35 @@ class ArvoreVP:
         return _Iterador(_IteradorInterFixado(self._raiz))
 
 
+    def __eq__(self, obj):
+        """Compara self com obj.
+
+        Serão iguais se: Serão iguais se: 1º obj for uma arvore, ArvoreBinaria,
+        ArvoreVP ou ArvoreAVL e 2º para qualquer item x em self, x também está
+        presente em obj na mesma quantidade.
+
+        Os itens de self e de obj serão comparados utilizando o comparador de
+        self.
+        """
+        if not isinstance(obj, (arvore, ArvoreAVL, ArvoreVP)):
+            return False
+
+        if isinstance(obj, arvore):
+            obj = _arvoreVP(obj, self._maior)
+
+        return self._tamanhosIguais(obj) and self._itensEQuantidadesIguais(obj)
+
+
+    def _tamanhosIguais(self, arvore):
+        return self.tamanho == arvore.tamanho
+
+
+    def _itensEQuantidadesIguais(self, arvore):
+        iterador = zip(self.interFixado(), arvore.interFixado())
+
+        return all(self._saoIguais(i1, i2) for i1, i2 in iterador)
+
+
     def _nodo(self, item, funcao=_itemNaoEncontrado):
         nodo = self._raiz
 
@@ -1374,7 +1605,6 @@ class ArvoreVP:
         return self._maior(valor1, valor2) is IGUAIS
 
 
-    # aprimorado
     def pai(self, item):
         """Retorna o pai de um item.
 

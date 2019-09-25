@@ -12,7 +12,6 @@ from erros import ItemNaoEncontrado, FalhaNaOperacao
 from copy import deepcopy
 from math import ceil
 from uteis import NAO_INFORMADO, executar, INDEFINIDO, INFINITO
-from iteruteis import vazio
 from arvore import Heap, IGUAIS
 
 
