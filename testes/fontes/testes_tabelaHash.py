@@ -1,6 +1,7 @@
 from erros import ItemNaoEncontrado
 from tabelaHash import TabelaHash
 from pytest import raises
+from uteistestes import maior, pickle, load, deletar
 
 
 def codigoHash(chave: str):
@@ -21,6 +22,12 @@ def dataDeFundacao():
 
 
 fundacao = dataDeFundacao()
+
+
+def teste_instanciarUmaTabelaHashComUma_funcaoHash_None_geraUmErro():
+    with raises(TypeError):
+        TabelaHash(None)
+
 
 def testes_oMetodo_setitem_informarUma():
     chaveQueNaoEstaNaTabelaEUmValor()
@@ -318,3 +325,136 @@ def testes_tabelaHashComUmaFuncaoQueGeraCodigosNegativos():
     assert 'apple' in fund
     assert 'facebook' in fund
     assert 'ibm' in fund
+
+
+def testes_oOperadorDe_igualdade_retornaTrueSe():
+    asTabelasPossuiremParesChaveValorExatamenteIguais()
+    asTabelasEstiveremVazias()
+    oDicioPossuirTodosOsParesChaveValorDaTabela()
+    aSkipListPossuirTodosOsParesChaveValorDaTabela()
+
+
+def asTabelasPossuiremParesChaveValorExatamenteIguais():
+    assert fundacao == dataDeFundacao()
+
+
+def asTabelasEstiveremVazias():
+    assert TabelaHash(codigoHash) == TabelaHash(codigoHash)
+
+
+def oDicioPossuirTodosOsParesChaveValorDaTabela():
+    dicio = {'microsoft':1975, 'google':1998, 'apple':1976, 'facebook':2004,
+             'ibm':1911}
+
+    assert fundacao == dicio
+
+
+def aSkipListPossuirTodosOsParesChaveValorDaTabela():
+    from skipList import SkipList
+
+    lista = SkipList(maior)
+    lista['microsoft'] = 1975
+    lista['google'] = 1998
+    lista['apple'] = 1976
+    lista['facebook'] = 2004
+    lista['ibm'] = 1911
+
+    assert fundacao == lista
+
+
+def testes_oOperadorDe_igualdade_retornaFalseSe():
+    asChavesNaoForemTodasIguais()
+    osValoresNaoForemTodosIguais()
+    umaDasTabelasPossuirUmParQueAOutraNaoTem()
+    apenasUmaDasTabelasEstiverVazia()
+    oObjetoInformadoNaoForUmaTabelaSkipListOuDicio()
+
+
+def asChavesNaoForemTodasIguais():
+    t = TabelaHash(codigoHash)
+    t['microsoft'] = 1975
+    t['sony'] = 1998 # na tabela fundacao a google esta no lugar da sony
+    t['apple'] = 1976
+    t['facebook'] = 2004
+    t['ibm'] = 1911
+
+    assert fundacao != t
+
+
+def osValoresNaoForemTodosIguais():
+    t = TabelaHash(codigoHash)
+    t['microsoft'] = 1975
+    t['google'] = 2000 # na tabela fundacao o valor associado a google é 1998
+    t['apple'] = 1976
+    t['facebook'] = 2004
+    t['ibm'] = 1911
+
+    assert fundacao != t
+
+
+def umaDasTabelasPossuirUmParQueAOutraNaoTem():
+    t = dataDeFundacao()
+    t['amazon'] = 1994
+
+    assert fundacao != t
+    assert t != fundacao
+
+
+def apenasUmaDasTabelasEstiverVazia():
+    assert fundacao != TabelaHash(codigoHash)
+    assert TabelaHash(codigoHash) != fundacao
+
+
+def oObjetoInformadoNaoForUmaTabelaSkipListOuDicio():
+    assert fundacao != (1, 2)
+
+
+def testesDasFuncoes_dumpEloads_comUmaTabelaHash():
+    pickle(fundacao, 'tabela_hash')
+    tabela = load('tabela_hash')
+
+    assegurarQuePossuemAMesmaEstrutura(tabela, fundacao)
+    assert tabela.tamanho == fundacao.tamanho
+    assert tabela.fatorDeCarga == fundacao.fatorDeCarga
+    assert tabela.limiteFatorDeCarga == fundacao.limiteFatorDeCarga
+    assert tabela.rehashsExecutados == fundacao.rehashsExecutados
+    assert tabela.totalDeColisoes == fundacao.totalDeColisoes
+
+    deletar('tabela_hash')
+
+
+def assegurarQuePossuemAMesmaEstrutura(tabela1, tabela2):
+    for bucket1, bucket2 in zip(tabela1._tabela, tabela2._tabela):
+        assert all(iguais(e1, e2) for e1, e2 in zip(bucket1, bucket2))
+
+
+def iguais(entrada1, entrada2):
+    return entrada1.chave == entrada2.chave and entrada1.valor == \
+           entrada2.valor
+
+
+def testesDasFuncoes_dumpEloads_comUmaTabelaHashVazia():
+    pickle(TabelaHash(codigoHash), 'tabela_hashVazia')
+    tabela = load('tabela_hashVazia')
+
+    assert tabela.tamanho is 0
+    assert tabela.fatorDeCarga == 0
+    assert tabela.limiteFatorDeCarga == 0.75
+    assert tabela.rehashsExecutados is 0
+    assert tabela.totalDeColisoes is 0
+
+    deletar('tabela_hashVazia')
+
+
+def testes_oMetodo_valor_retorna():
+    oValorAssociadoComAChaveSeEstaEstaForEncontradaNaTabela()
+    oValorPadraoInformadoSeAChaveNaoForEncontradaNaTabela()
+
+
+def oValorAssociadoComAChaveSeEstaEstaForEncontradaNaTabela():
+    assert fundacao.valor('ibm') == 1911
+
+
+def oValorPadraoInformadoSeAChaveNaoForEncontradaNaTabela():
+    assert fundacao.valor('amazon', 1994) == 1994
+

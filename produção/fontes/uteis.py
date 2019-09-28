@@ -51,7 +51,6 @@ def executar(funcao, padrao=None):
 
 
 def iguais(obj1, obj2):
-    # TODO documentar
     if not _iteraveis(obj1, obj2):
         return obj1 == obj2
     return all(i1 == i2 for i1, i2 in
@@ -60,10 +59,6 @@ def iguais(obj1, obj2):
 
 def _iteraveis(*objs):
     return all(isinstance(obj, Iterable) for obj in objs)
-
-
-# TODO função para verificar se pode-se encontrar todos os itens de um
-#  iterável estão em outro iterável
 
 
 class IteradorVazio:

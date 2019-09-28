@@ -86,7 +86,7 @@ class Grafo:
         return len(self._vertices)
 
 
-    def inserir(self, item, b=NAO_INFORMADO, **info):
+    def inserir(self, item, b=NAO_INFORMADO, **ligacao):
         """Insere o item no grafo.
 
         Se b for informado, será criada uma ligação orientada de item para b
@@ -98,27 +98,77 @@ class Grafo:
            :param b opcional, o item (que já deve estar presente no grafo)
            para o qual item será ligado
 
-           :param info as informações da ligação entre item e b, elas serão
+           :param ligacao as informações da ligação entre item e b, elas serão
            ignoradas se b não for informado
 
         Erros
            :exception ItemNaoEncontradoErro se b for informado mas não for
-           localizado.
+           localizado. Neste caso o item não será inserido.
 
         """
-        self._vertices.append(_Vertice(item))
+        v = _Vertice(item)
 
         if b is not NAO_INFORMADO:
-            self.ligar(item, b, **info)
+            self._ligar(v, self._vertice(b), ORIENTADA, ligacao)
+        self._vertices.append(v)
+
+
+    def _ligar(self, v1, v2, tipo, ligacao):
+        """Liga o vértice v1 ao v2, nesta direção se for orientada."""
+        v1.ligar(v2, ligacao)
+        if v1 is not v2 and tipo is NAO_ORIENTADA:
+            v2.ligar(v1, ligacao)
+
+        if tipo is ORIENTADA:
+            self._totalDeLigacoesOrientadas += 1
+        else:
+            self._totalDeLigacoesNaoOrientadas += 1
 
 
     def __contains__(self, item):
         """Determina se o grafo possui o item."""
-        for v in self._vertices:
-            if v.item == item:
-                return True
+        return any(item == v.item for v in self._vertices)
 
-        return False
+
+    def __eq__(self, obj):
+        """Compara self com obj.
+
+        Serão iguais se obj for um Grafo e possuir todos os itens e ligações
+        orientadas e não orientadas que self possui. Para que duas ligações
+        orientadas sejam consideradas iguais é preciso que elas possuam
+        origem e destino iguais.
+        """
+        if not isinstance(obj, Grafo) or self._totalDeItensDif(obj) or \
+                self._totalDeLigacoesDif(obj) or self._itensDif(obj):
+            return False
+        vertsELigs = list(obj._itens_ligacoes())
+
+        return all(l in vertsELigs for l in self._itens_ligacoes())
+
+
+    def _itens_ligacoes(self):
+        """Retorna um gerador de tuplas que possuem a seguinte forma
+        (item1, ligação, item2), onde item1 e item2 são itens do grafo e
+        ligação é a ligação de item1 para item2"""
+        return ((o.item, l, d.item) for o, l, d in self._vertices_ligacoes())
+
+
+    def _totalDeItensDif(self, grafo):
+        return self.totalDeItens != grafo.totalDeItens
+
+
+    def _totalDeLigacoesDif(self, grafo):
+        """Retorna true se o total de ligações orientadas de self for
+        diferentes do total de ligações orientadas de grafo ou se o total
+        de ligações não orientadas for diferente"""
+        return self.totalDeLigacoesOrientadas != \
+               grafo.totalDeLigacoesOrientadas or \
+               self.totalDeLigacoesNaoOrientadas != \
+               grafo.totalDeLigacoesNaoOrientadas
+
+    def _itensDif(self, grafo):
+        """Retorna true se grafo não possuir um dos itens de self"""
+        return not all(v.item in grafo for v in self._vertices)
 
 
     def rotas(self, a, b):
@@ -269,10 +319,10 @@ class Grafo:
 
 
     def _vertices_ligacoes(self):
-        # v e a são vértices, l é a ligação de v para a
+        # v e a são vértices, l é a ligação de v para b
         # o método retorna todos os pares, juntamente com a ligação que os
         # une, possíveis
-        return ((v, l, a) for v in self._vertices for a,
+        return ((v, l, b) for v in self._vertices for b,
                                                       l in v.adjacentes_ligacoes)
 
 
@@ -304,17 +354,7 @@ class Grafo:
            :exception ItemNaoEncontradoErro se a ou b não for localizado.
         """
         # a orientação é determinada pela ordem dos itens
-        a = self._vertice(a)
-        b = self._vertice(b)
-
-        a.ligar(b, info)
-        if a is not b and tipo is NAO_ORIENTADA:
-            b.ligar(a, info)
-
-        if tipo is ORIENTADA:
-            self._totalDeLigacoesOrientadas += 1
-        else:
-            self._totalDeLigacoesNaoOrientadas += 1
+        self._ligar(self._vertice(a), self._vertice(b), tipo, info)
 
 
     def desligar(self, a, b, filtro=lambda lig:True):
@@ -520,7 +560,7 @@ class Grafo:
 
 
 class _Vertice:
-    """Os vértices do grafo."""
+    """Vértices do grafo."""
     # nova estrutura: propriedade adjacentes = vertices adjacentes a este
     # precisa melhorar um pouco
 

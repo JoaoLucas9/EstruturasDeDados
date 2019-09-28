@@ -10,18 +10,6 @@ from random import choice
 from erros import ColecaoVazia as ListaVazia
 
 
-def _encapsular(comparador):
-
-    def _comparador(c1, c2):
-        if c1 is _MENOR or c2 is _MAIOR:
-            return c2
-        if c1 is _MAIOR or c2 is _MENOR:
-            return c1
-        return comparador(c1, c2)
-
-    return _comparador
-
-
 def _nodosAbaixo(nodo):
     while nodo.abaixo is not None:
         nodo = nodo.abaixo
@@ -95,11 +83,26 @@ class SkipList:
            :param comparador : Callable compara duas chaves e retorna a
            maior delas, se elas forem iguais então o comparador deve
            retornar arvore.IGUAIS.
+           Se você deseja registrar e carregar a SkipList em/de um arquivo
+           utilizando as funções pickle.dump() e pickle.load(), o comparador
+           não pode ser uma função lambda.
         """
         self._raiz = _novaListaVazia()
-        self._maior = _encapsular(comparador)
+
+        if comparador is None:
+            raise TypeError('O comparador não pode ser None.')
+        self._comparador = comparador
         self._tamanho = 0
-    
+
+
+    def _maior(self, c1, c2):
+        """Determina qual a maior de duas chaves"""
+        if c1 is _MENOR or c2 is _MAIOR:
+            return c2
+        if c1 is _MAIOR or c2 is _MENOR:
+            return c1
+        return self._comparador(c1, c2)
+
 
     @property
     def tamanho(self):
@@ -211,9 +214,12 @@ class SkipList:
 
     def _skipSearch(self, chave):
         """Retorna o nodo que possui a maior chave menor igual a chave.
+
         Retorna o nodo que possui a maior chave, sendo que a chave deste
         nodo deve ser menor igual ao parâmetro chave informado.
+
         Procura por todas as listas do SkipList.
+
         Pode retornar o nodo com a chave _MENOR.
         """
         return self._skipSearchPath(chave)[-1]
@@ -313,8 +319,29 @@ class SkipList:
         return (par.chave for par in self.pares())
 
 
+    def __eq__(self, obj):
+        """Compara self com obj.
+
+        Serão iguais se obj for uma SkipList e os pares chave-valor de self
+        e obj forem iguais e se estiverem na mesma ordem.
+
+        Dois pares p1 e p2 serão iguais se a chave de p1 for igual a chave
+        de p2 e o valor de p1 for igual ao valor de p2.
+
+        As chaves serão comparadas utilizando o comparador de self enquanto
+        que os valores serão comparados com o operador ==.
+        """
+        if not isinstance(obj, SkipList) or self.tamanho != obj.tamanho:
+            return False
+        iguais = lambda n1, n2: n1.valor == n2.valor and self._saoIguais(
+            n1.chave, n2.chave)
+
+        return all(iguais(n1, n2) for n1, n2 in zip(self.pares(), obj.pares()))
+
+
     def pares(self):
-        """Retorna um iterador que percorre os pares da tabela.
+        """Gerador que percorre todos os pares da tabela.
+
         Seja p um dos pares da tabela, para obter a chave basta fazer
         p.chave, analogamente, para obter o valor basta fazer p.valor.
         """
@@ -376,11 +403,20 @@ class SkipList:
         return _ultimoNodo(_ultimoNodoDaTorre(self._raiz))
 
 
+    def valor(self, chave, padrao=None):
+        """Retorna o valor associado com a chave se ela estiver na lista,
+        senão padrao."""
+        e = self._skipSearch(chave)
+
+        return e.valor if self._saoIguais(e.chave, chave) else padrao
+
+
 class _Nodo:
 
-    def __init__(self, chave, item, anterior=None, sucessor=None, abaixo=None):
+    def __init__(self, chave, valor, anterior=None, sucessor=None,
+                 abaixo=None):
         self.chave = chave
-        self.valor = item
+        self.valor = valor
         self.anterior = anterior
         self.sucessor = sucessor
         self.abaixo = abaixo

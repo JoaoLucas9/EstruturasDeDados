@@ -1,7 +1,6 @@
 """Funções comumente usadas em testes, declaradas aqui para evitar
 duplicação de código."""
 from arvore import IGUAIS
-# TODO renomear
 import pickle as arqmin
 import os
 

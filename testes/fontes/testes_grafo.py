@@ -3,8 +3,9 @@ from iteruteis import vazio
 from pytest import raises
 from erros import ItemNaoEncontrado, FalhaNaOperacao
 from pyext import naoGeraErro
+from uteis import executar
+from uteistestes import pickle, load, deletar
 
-#não foram realizados testes com itens duplicados
 def grafoParaTestesDoMetodo_desligar():
     grafo = novoGrafo('PE', 'RJ')
     grafo.ligar('PE', 'RJ', NAO_ORIENTADA, nome='BR101', comp=1.4, ano=53)
@@ -105,6 +106,12 @@ def testes_inserir():
 def testes_inserir_iraGerarUmErroSeBNaoForLocalizado():
     with raises(ItemNaoEncontrado):
         grafo.inserir('CE', '-')
+
+
+def testes_inserir_oItemNaoSeraInseridoSeUmErroTiverSidoGeradoDuranteAOperacaoDeInsercao():
+    executar(lambda : grafo.inserir('CE', '-'))
+
+    assert 'CE' not in grafo
 
 
 def testes_inserir_iraIgnorarOTerceiroParametroSeBNaoForInformado():
@@ -1019,5 +1026,98 @@ def testes_arvoreCoberturaMinima_iraGerarUmErroSeOGrafoNaoForConexo():
         grafo.arvoreCoberturaMinima()
 
 
+def testes_operadorDe_igualdade_retornaTrueSe():
+    osItensEAsLigacoesDosGrafosForemIguais()
+    osGrafosEstiveremVazios()
+
+
+def osItensEAsLigacoesDosGrafosForemIguais():
+    assert grafo == grafoDeTestes()
+    assert novoGrafo('PE', 'AM') == novoGrafo('AM', 'PE')
+
+
+def osGrafosEstiveremVazios():
+    assert Grafo() == Grafo()
+
+
+def testes_operadorDe_igualdade_retornaFalseSe():
+    umaLiGacaoEmUmDosGrafosEOrientadaENoOutroNao()
+    umaLiGacaoEmUmDosGrafosForOrientadaDeAParaB_eNoOutroOrientadaDeBParaA()
+    umDosGrafosPossuirLigacoesQueOOutroNaoTem()
+    umDosGrafosPossuirItensQueOOutroNaoTem()
+    apenasUmDosGrafosEstiverVazio()
+    oItemInformadoNaoForUmGrafo()
+
+
+def umaLiGacaoEmUmDosGrafosEOrientadaENoOutroNao():
+    """A ideia é que ambos os grafos possuam a mesma quantidade de ligçãoes
+    orientadas e não orientadas contudo em um dos grafos uma ligação L de a
+    para b é orientada e no outro não."""
+    g1 = novoGrafo('PE', 'AM')
+    g1.ligar('PE', 'AM', **pe_am)
+    g1.ligar('PE', 'AM', NAO_ORIENTADA, id='01')
+
+    g2 = novoGrafo('PE', 'AM')
+    g2.ligar('PE', 'AM', NAO_ORIENTADA, **pe_am)
+    g1.ligar('PE', 'AM', id='02')
+
+    assert g1 != g2
+
+
+def umaLiGacaoEmUmDosGrafosForOrientadaDeAParaB_eNoOutroOrientadaDeBParaA():
+    """dois grafos possuem a mesma ligação orientada L, contudo em um deles o
+    sentido dela é de a para b no outro é de b para a."""
+    g1 = novoGrafo('PE', 'AM')
+    g1.ligar('PE', 'AM', id='01')
+
+    g2 = novoGrafo('PE', 'AM')
+    g2.ligar('AM', 'PE', id='01')
+
+    assert g1 != g2
+
+
+def umDosGrafosPossuirLigacoesQueOOutroNaoTem():
+    g1 = grafoDeTestes()
+    g1.ligar('AM', 'AM', id='01')
+
+    g2 = grafoDeTestes()
+
+    assert g1 != g2 and g2 != g1
+
+    g2.ligar('AM', 'AM', id='02')
+    # muito parecido com a ligação do g1, contudo o id é diferente
+
+    assert g1 != g2 and g2 != g1
+
+
+def umDosGrafosPossuirItensQueOOutroNaoTem():
+    g1 = grafoDeTestes()
+    g1.inserir('CE')
+
+    g2 = grafoDeTestes()
+
+    assert g1 != g2 and g2 != g1
+    assert novoGrafo('PE') != novoGrafo('AM')
+
+
+def apenasUmDosGrafosEstiverVazio():
+    assert grafo != Grafo()
+    assert Grafo() != grafo
+
+
+def oItemInformadoNaoForUmGrafo():
+    assert grafo != (1, 2)
+
+
+def testesDasFuncoes_dumpEloads_comUmGrafo():
+    pickle(grafo, 'grafo')
+    assert load('grafo') == grafo
+    deletar('grafo')
+
+
+def testesDasFuncoes_dumpEloads_comUmGrafoVazio():
+    pickle(Grafo(), 'grafoVazio')
+    assert load('grafoVazio') == Grafo()
+    deletar('grafoVazio')
 
 

@@ -2,14 +2,24 @@ from skipList import SkipList
 from arvore import IGUAIS
 from erros import ItemNaoEncontrado, ColecaoVazia
 from pytest import raises
+from uteistestes import maior, pickle, load, deletar
 
 
 def listaVazia():
-    return SkipList(lambda c1, c2: IGUAIS if c1 == c2 else max(c1, c2))
+    return SkipList(maior)
+
+
+def novaSkipList(chave_valor):
+    skipList = listaVazia()
+
+    for c, v in chave_valor.items():
+        skipList[c] = v
+
+    return skipList
 
 
 def listaDeTestes():
-    precos = SkipList(lambda c1, c2: IGUAIS if c1 == c2 else max(c1, c2))
+    precos = SkipList(maior)
     precos[2] = 'caneta'
     precos[100] = 'uniforme'
     precos[60] = 'fone'
@@ -24,6 +34,10 @@ def listaDeTestes():
 
 lista = listaDeTestes()
 
+
+def teste_instanciarUmaSkipListComUm_comparador_None_geraUmErro():
+    with raises(TypeError):
+        SkipList(None)
 
 
 def testes_metodo_setitem():
@@ -293,4 +307,208 @@ def teste_metodo_maiorPar():
 def teste_metodo_maiorPar_geraUmErroSeAListaEstiverVazia():
     with raises(ColecaoVazia):
         listaVazia().maiorPar()
+
+
+def testes_oOperadorDe_igualdade_retornaTrueSe():
+    asSkipListsPossuiremParesChaveValorExatamenteIguaisNaMesmaOrdem()
+    asSkipListsEstiveremVazias()
+
+
+def asSkipListsPossuiremParesChaveValorExatamenteIguaisNaMesmaOrdem():
+    l1 = listaVazia()
+    l1[2] = 'caneta'
+    l1[100] = 'uniforme'
+    l1[60] = 'fone'
+    l1[15] = 'estojo'
+    l1[30] = 'livro'
+    l1[5] = 'regua'
+
+    l2 = listaVazia()
+    l2[60] = 'fone'
+    l2[5] = 'regua'
+    l2[2] = 'caneta'
+    l2[30] = 'livro'
+    l2[100] = 'uniforme'
+    l2[15] = 'estojo'
+
+    assert l1 == l2
+
+
+def asSkipListsEstiveremVazias():
+    assert listaVazia() == listaVazia()
+
+
+def testes_oOperadorDe_igualdade_retornaFalseSe():
+    asSkipListsPossuiremParesChaveValorExatamenteIguaisMasEmOrdensDiferentes()
+    asChavesNaoForemTodasIguais()
+    osValoresDasSkipListsNaoForemIguais()
+    umaDasSkipListPossuirUmParQueAOutraNaoTem()
+    apenasUmaDasListasEstiverVazia()
+    oObjetoNaoForUmaSkipList()
+
+
+def asSkipListsPossuiremParesChaveValorExatamenteIguaisMasEmOrdensDiferentes():
+    l1 = SkipList(lambda x1, x2: IGUAIS if x1 == x2 else max(x1, x2))
+    l1[2] = 'caneta'
+    l1[100] = 'uniforme'
+
+    l2 = SkipList(lambda x1, x2: IGUAIS if x1 == x2 else min(x1, x2))
+    l2[2] = 'caneta'
+    l2[100] = 'uniforme'
+
+    assert l1 != l2
+
+
+def asChavesNaoForemTodasIguais():
+    """As skip lists diferem em uma única chave"""
+    l1 = listaVazia()
+    l1[2] = 'caneta'
+    l1[100] = 'uniforme'
+    l1[60] = 'fone'
+    l1[15] = 'estojo'
+    l1[30] = 'livro'
+    l1[5] = 'regua'
+
+    l2 = listaVazia()
+    l2[2] = 'caneta'
+    l2[100] = 'uniforme'
+    l2[60] = 'fone'
+    l2[15] = 'estojo'
+    l2[50] = 'livro' # o livro vale 30 em l1
+    l2[5] = 'regua'
+
+    assert l1 != l2
+
+
+def osValoresDasSkipListsNaoForemIguais():
+    """As skip lists diferem em um única valor"""
+    l1 = listaVazia()
+    l1[2] = 'caneta'
+    l1[100] = 'uniforme'
+    l1[60] = 'fone'
+    l1[15] = 'estojo'
+    l1[30] = 'livro'
+    l1[5] = 'regua'
+
+    l2 = listaVazia()
+    l2[2] = 'caneta'
+    l2[100] = 'uniforme'
+    l2[60] = 'fone'
+    l2[15] = 'estojo'
+    l2[30] = 'caderno' # 30 é o valor do livro em l1
+    l2[5] = 'regua'
+
+    assert l1 != l2
+
+
+def umaDasSkipListPossuirUmParQueAOutraNaoTem():
+    l1 = listaVazia()
+    l1[2] = 'caneta'
+    l1[100] = 'uniforme'
+    l1[60] = 'fone'
+    l1[15] = 'estojo'
+    l1[50] = 'livro'
+
+    l2 = listaVazia()
+    l2[60] = 'fone'
+    l2[5] = 'regua'
+    l2[2] = 'caneta'
+    l2[30] = 'livro'
+    l2[100] = 'uniforme'
+    l2[15] = 'estojo'
+
+    assert l1 != l2
+    assert l2 != l1
+
+
+def apenasUmaDasListasEstiverVazia():
+    assert lista != listaVazia()
+    assert listaVazia() != lista
+
+
+def oObjetoNaoForUmaSkipList():
+    dicio = dict()
+    dicio[2] = 'caneta'
+    dicio[100] = 'uniforme'
+    dicio[60] = 'fone'
+    dicio[15] = 'estojo'
+    dicio[30] = 'livro'
+    dicio[5] = 'regua'
+    dicio[50] = 'mochila'
+    dicio[10] = 'caderno'
+
+    assert lista != dicio
+
+
+def teste_metodo_eq_comparaAsChavesUtilizandoOComparador():
+    """o teste visa garantir que o método __eq__ compara as chaves utilizando
+    o comparador da SkipList ao invés do operador ==.
+
+    lógica do teste: dois preços, x e y são considerados baratos,
+    portanto produtos com o preço x ou y possuem preços iguais (preços
+    baratos) mesmo que x != y, se os preços dos produtos forem comparados
+    uitlizando == duas SkipLists com os mesmos produtos e com os mesmos
+    preços serão considerados diferentes quando deveriam ser considerados
+    iguais.
+    """
+    barato = [5, 10] # produtos com estes precos são considerados baratos
+    l1 = SkipList(lambda x1, x2: IGUAIS if x1 in barato and x2 in barato else
+    max(x1, x2))
+    l1[5] = 'caneta'
+
+    l2 = SkipList(lambda x1, x2: IGUAIS if x1 in barato and x2 in barato else
+    max(x1, x2))
+    l2[10] = 'caneta'
+
+    assert l1 == l2
+
+
+def testesDasFuncoes_dumpEloads_comUmaSkipList():
+    pickle(lista, 'skipList')
+    l = load('skipList')
+
+    assegurarQueSaoExatamenteIguais(l, lista)
+    assert l.tamanho == lista.tamanho
+
+    deletar('skipList')
+
+
+def assegurarQueSaoExatamenteIguais(lista1, lista2):
+    raiz1 = lista1._raiz
+    raiz2 = lista2._raiz
+
+    while raiz1 is not None:
+        assegurarQueSaoIguais(raiz1, raiz2)
+        raiz1 = raiz1.abaixo
+        raiz2 = raiz2.abaixo
+
+
+def assegurarQueSaoIguais(nodo1, nodo2):
+    while nodo1 is not None:
+        assert nodo1.chave == nodo2.chave
+        assert nodo1.valor == nodo2.valor
+        nodo1 = nodo1.sucessor
+        nodo2 = nodo2.sucessor
+
+
+def testesDasFuncoes_dumpEloads_comUmaSkipListVazia():
+    pickle(SkipList(maior), 'skipListVazia')
+
+    assert load('skipListVazia').tamanho is 0
+
+    deletar('skipListVazia')
+
+
+def testes_oMetodo_valor_retorna():
+    oValorAssociadoComAChaveSeEstaEstaForEncontradaNaLista()
+    oValorPadraoInformadoSeAChaveNaoForEncontradaNaLista()
+
+
+def oValorAssociadoComAChaveSeEstaEstaForEncontradaNaLista():
+    assert lista.valor(60) is 'fone'
+
+
+def oValorPadraoInformadoSeAChaveNaoForEncontradaNaLista():
+    assert lista.valor(-60, 'valor de teste') is 'valor de teste'
+
 

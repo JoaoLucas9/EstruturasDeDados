@@ -83,9 +83,7 @@ IGUAIS = 'as prioridades são iguais_Recife_PE 01/07/2019 14:42h'
 PRETO = 0
 VERMELHO = 1
 
-# TODO ? testar as aŕvores que recebem um comparador para garantir que elas
-#  utilizem apenas o comparador para comparar dois itens e nunca usem o
-#  operador ==
+
 class arvore:
     """Árvore genérica não ordenada.
 
@@ -902,8 +900,6 @@ class Heap:
 
 
 class _NodoBin:
-    # TODO refatorar, acho que é bom remover o __hash__, talvez remover o
-    #  __eq__ também
 
     def __init__(self, item, pai=None, esquerdo=None, direito=None):
         self.item = item
@@ -924,7 +920,6 @@ class _NodoBin:
         return self.esquerdo if self.esquerdo is not None else self.direito,
 
 
-    # TODO refatorar
     def __eq__(self, obj):
         # funciona apenas com _NodoBin
         #futuras versões devem aceitar _Nodo
@@ -934,11 +929,6 @@ class _NodoBin:
         paiSelf = None if self.pai is None else self.pai.item
         paiObj = None if obj.pai is None else obj.pai.item
 
-        if paiSelf != paiObj:
-            print('filhos diferentes')
-            print(self)
-            print(obj)
-
         return self.item == obj.item and paiSelf == paiObj and \
                                      self._osFilhosSaoIguais(obj)
 
@@ -947,7 +937,6 @@ class _NodoBin:
         return str(self.item)
 
 
-    # TODO refatorar
     def _osFilhosSaoIguais(self, nodo: '_NodoBin'):
         """Compara os filhos de self com os filhos de nodo.
 
@@ -1134,7 +1123,6 @@ class ArvoreAVL:
             else:
                 nodo = nodo.esquerdo
 
-        # TODO informar apenas o item
         return funcao(f'{item} não encontrado.')
 
 
@@ -1479,7 +1467,6 @@ class ArvoreVP:
             return u
         else:
             b = self._reestruturar(u, v, z)
-            # TODO verificar "TypeError: unhashable type"
             self._recolorir({b: PRETO, b.esquerdo:VERMELHO, b.direito:VERMELHO})
             return b
 
